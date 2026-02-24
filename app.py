@@ -276,12 +276,6 @@ def __get_echo() -> dict:
         "session": {k: v for k, v in session.items()},
         "cookies": {k: v for k, v in request.cookies.items()}
     }
-    
-    # Print to logs/console
-    print("\n--- API ECHO REQUEST RECEIVED ---", flush=True)
-    print(__dict2str(echo_data), flush=True)
-    print("--- END API ECHO ---\n", flush=True)
-
     return echo_data
 
 
