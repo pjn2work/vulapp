@@ -9,10 +9,22 @@ from datetime import datetime
 from time import sleep
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask import Flask, request, make_response, render_template, redirect, url_for, session
-
+from flask_smorest import Api, Blueprint
 
 app = Flask(__name__)
 app.secret_key = 'super-secret-key-for-sessions'
+
+# OpenAPI / Swagger configuration
+app.config["API_TITLE"] = "Vulnerable App API"
+app.config["API_VERSION"] = "v1"
+app.config["OPENAPI_VERSION"] = "3.0.2"
+app.config["OPENAPI_URL_PREFIX"] = "/"
+app.config["OPENAPI_JSON_PATH"] = "openapi.json"
+app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
+app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+
+api = Api(app)
+api_blp = Blueprint("api", "api", url_prefix="/api", description="Operations on API")
 
 # Handle proxy headers (like X-Forwarded-Proto from Nginx)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -94,17 +106,17 @@ def requires_secret_cookie(f):
     return decorated
 
 @app.before_request
-def log_welcome_requests():
-    if request.path.startswith('/web/welcome-'):
+def log_requests():
+    if request.path.startswith('/web/welcome-') or request.path.startswith('/api/v1/'):
         echo_data: str = __dict2str(__get_echo())
 
         #log_entry = f"--- {datetime.now()} | {request.path} ---\n{echo_data}\n\n"
         #with open("welcome_requests.log", "a") as f:
         #    f.write(log_entry)
         
-        print("\n--- WEB REQUEST RECEIVED ---", flush=True)
+        print("\n--- REQUEST RECEIVED ---", flush=True)
         print(echo_data, flush=True)
-        print("--- END WEB ---\n", flush=True)
+        print("--- END REQUEST ---\n", flush=True)
 
 # --- ROUTES ---
 
@@ -227,14 +239,17 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
-# 6. API Echo Endpoint
-@app.route('/api/echo', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+
+### API Endpoints
+
+# 6. API TOOLS - Echo Endpoint
+@api_blp.route('/echo', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def api_echo():
     echo_data = __get_echo()
     return echo_data, 200
 
-
-@app.route('/api/otp', methods=['GET', 'POST'])
+# 7. API TOOLS -  2FA OTP Endpoint
+@api_blp.route('/otp', methods=['GET', 'POST'])
 def get_otp():
     seed: str = request.form.get('seed', '') if request.method == 'POST' else request.args.get('seed', '')
     try:
@@ -247,6 +262,36 @@ def get_otp():
     except Exception as err:
         return str(err), 404
     return echo_data, 200
+
+# 8. API Protected by Header + Cookie
+@api_blp.route('/v1/header-cookie', methods=['GET'])
+@requires_secret_header
+@requires_secret_cookie
+def api_secret_header_cookie():
+    data = {
+        "headers": dict(request.headers),
+        "cookies": request.cookies,
+        "info": "You've found the static headers+cookies thresure",
+    }
+    return data, 200
+
+# 9. API Protected by BasicAuth + Header + Cookie
+@api_blp.route('/v1/header-cookie-auth', methods=['GET'])
+@requires_basic_auth
+@requires_secret_header
+@requires_secret_cookie
+def api_secret_header_cookie_basic_auth():
+    auth = request.authorization
+    data = {
+        "basic-auth": {
+            "username": auth.username, 
+            "password": auth.password, 
+        },
+        "headers": dict(request.headers),
+        "cookies": request.cookies,
+        "info": "You've found the static headers+cookies with basic auth thresure",
+    }
+    return data, 200
 
 
 def __get_otp(seed_b32_str: str = "") -> tuple[str, float, str]:
@@ -276,11 +321,21 @@ def __get_echo() -> dict:
         "session": {k: v for k, v in session.items()},
         "cookies": {k: v for k, v in request.cookies.items()}
     }
+    
+    auth = request.authorization
+    if auth:
+        echo_data["basic-auth"] = {
+            "username": auth.username, 
+            "password": auth.password, 
+        }
     return echo_data
 
 
 def __dict2str(d: dict) -> str:
     return json.dumps(d, indent=2)
+
+
+api.register_blueprint(api_blp)
 
 
 if __name__ == '__main__':
