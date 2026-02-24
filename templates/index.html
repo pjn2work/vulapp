@@ -41,8 +41,13 @@
 
     <h2>API:</h2>
     <ul>
+        <li><a href="/swagger-ui"><b>Interactive API Documentation (Swagger UI)</b></a></li>
+        <li><a href="/openapi.json"><b>OpenAPI JSON file</b></a></li>
+        
         <li><a href="/api/echo?p1=test">1. All HTTP Methods. Echo JSON with: headers, query paramenters and body</a></li>
-        <li><a href="/api/otp?seed=XVQ2UIGO75XRUKJO">1. GET|POST /api/otp?seed=XVQ2UIGO75XRUKJO - returns JSON [OTP code, time_remaining, b32_seed]</a></li>
+        <li><a href="/api/v1/otp?seed=XVQ2UIGO75XRUKJO">2. GET|POST /api/v1/otp?seed=XVQ2UIGO75XRUKJO - returns JSON [OTP code, time_remaining, b32_seed]</a></li>
+        <li><a href="/api/v1/header-cookie">3. GET /api/v1/header-cookie (Requires secret header + cookie)</a></li>
+        <li><a href="/api/v1/header-cookie-auth">4. GET /api/v1/header-cookie-auth (Requires Basic Auth + secret header + cookie)</a></li>
     </ul>
 </body>
 

@@ -9,10 +9,22 @@ from datetime import datetime
 from time import sleep
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask import Flask, request, make_response, render_template, redirect, url_for, session
+from flask.views import MethodView
 from flask_smorest import Api, Blueprint
+import marshmallow as ma
 
 app = Flask(__name__)
 app.secret_key = 'super-secret-key-for-sessions'
+
+# --- SCHEMAS ---
+
+class OtpArgsSchema(ma.Schema):
+    seed = ma.fields.String(metadata={"description": "Base32 seed for TOTP generation"})
+
+class OtpResponseSchema(ma.Schema):
+    code = ma.fields.String(metadata={"description": "The generated TOTP code"})
+    time_remaining = ma.fields.Float(metadata={"description": "Seconds until the code expires"})
+    seed_b32_str = ma.fields.String(metadata={"description": "The seed used (generated if not provided)"})
 
 # OpenAPI / Swagger configuration
 app.config["API_TITLE"] = "Vulnerable App API"
@@ -108,7 +120,7 @@ def requires_secret_cookie(f):
 @app.before_request
 def log_requests():
     if request.path.startswith('/web/welcome-') or request.path.startswith('/api/v1/'):
-        echo_data: str = __dict2str(__get_echo())
+        echo_data: str = _dict2str(_get_echo())
 
         #log_entry = f"--- {datetime.now()} | {request.path} ---\n{echo_data}\n\n"
         #with open("welcome_requests.log", "a") as f:
@@ -245,23 +257,36 @@ def logout():
 # 6. API TOOLS - Echo Endpoint
 @api_blp.route('/echo', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def api_echo():
-    echo_data = __get_echo()
+    echo_data = _get_echo()
     return echo_data, 200
 
-# 7. API TOOLS -  2FA OTP Endpoint
-@api_blp.route('/otp', methods=['GET', 'POST'])
-def get_otp():
-    seed: str = request.form.get('seed', '') if request.method == 'POST' else request.args.get('seed', '')
-    try:
-        code, time_remaining, seed_b32_str = __get_otp(seed)
-        echo_data = {
-            "code": code,
-            "time_remaining": time_remaining,
-            "seed_b32_str": seed_b32_str,
-        }
-    except Exception as err:
-        return str(err), 404
-    return echo_data, 200
+# 7. API 2FA OTP Endpoint
+@api_blp.route('/v1/otp')
+class Otp(MethodView):
+    @api_blp.arguments(OtpArgsSchema, location="query")
+    @api_blp.response(200, OtpResponseSchema)
+    def get(self, args):
+        """Get TOTP code via query parameter"""
+        seed = args.get('seed', '')
+        return self._process(seed)
+
+    @api_blp.arguments(OtpArgsSchema, location="form")
+    @api_blp.response(200, OtpResponseSchema)
+    def post(self, args):
+        """Get TOTP code via form data"""
+        seed = args.get('seed', '')
+        return self._process(seed)
+
+    def _process(self, seed):
+        try:
+            code, time_remaining, seed_b32_str = _get_otp(seed)
+            return {
+                "code": code,
+                "time_remaining": time_remaining,
+                "seed_b32_str": seed_b32_str,
+            }
+        except Exception as err:
+            return {"message": str(err)}, 400
 
 # 8. API Protected by Header + Cookie
 @api_blp.route('/v1/header-cookie', methods=['GET'])
@@ -294,7 +319,7 @@ def api_secret_header_cookie_basic_auth():
     return data, 200
 
 
-def __get_otp(seed_b32_str: str = "") -> tuple[str, float, str]:
+def _get_otp(seed_b32_str: str = "") -> tuple[str, float, str]:
     if not seed_b32_str:
         seed_b32_str = pyotp.random_base32()
     totp = pyotp.TOTP(seed_b32_str)
@@ -302,13 +327,13 @@ def __get_otp(seed_b32_str: str = "") -> tuple[str, float, str]:
     time_remaining = (totp.interval - datetime.now().timestamp()) % totp.interval
     if time_remaining < 3.0:
         sleep(time_remaining)
-        return __get_otp(seed_b32_str=seed_b32_str)
+        return _get_otp(seed_b32_str=seed_b32_str)
     if not totp.verify(code):
         raise ValueError(f"Seed string in b32 '{seed_b32_str} fails with code '{code}'")
     return code, time_remaining, seed_b32_str
 
 
-def __get_echo() -> dict:
+def _get_echo() -> dict:
     echo_data = {
         "scheme": request.scheme,
         "is_https": request.is_secure,
@@ -331,7 +356,7 @@ def __get_echo() -> dict:
     return echo_data
 
 
-def __dict2str(d: dict) -> str:
+def _dict2str(d: dict) -> str:
     return json.dumps(d, indent=2)
 
 

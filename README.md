@@ -38,9 +38,13 @@ These pages require specific authentication or headers to access. All `/web/welc
 
 ### API Endpoints
 *   **`/api/echo`**: Reflects all request data (headers, params, body, cookies, session) in JSON format.
-*   **`/api/otp`**: TOTP utility.
-    *   **Usage:** `GET` or `POST` with `seed` parameter.
+*   **`/api/v1/otp`**: TOTP utility.
+    *   **Usage:** `GET` (query params) or `POST` (form data) with `seed` parameter.
     *   **Returns:** JSON containing current code, time remaining, and the seed.
+*   **`/api/v1/header-cookie`**: API protected by both a secret header and a secret cookie.
+*   **`/api/v1/header-cookie-auth`**: API protected by Basic Auth, a secret header, and a secret cookie.
+*   **`/swagger-ui`**: Interactive Swagger documentation for the API.
+*   **`/openapi.json`**: Raw OpenAPI specification.
 
 ---
 
