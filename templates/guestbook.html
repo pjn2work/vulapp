@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Guestbook - XSS</title></head>
+<body>
+    <h1>Guestbook (Reflected XSS Demo)</h1>
+    <p>Sign our guestbook!</p>
+    <form method="GET">
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" placeholder="e.g. <script>alert(1)</script>">
+        <button type="submit">Submit</button>
+    </form>
+    <hr>
+    <h3>Welcome, {{ name|safe }}!</h3>
+    <p>We are glad you're here.</p>
+</body>
+</html>

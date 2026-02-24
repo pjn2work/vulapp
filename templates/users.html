@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>User Search - SQLi</title></head>
+<body>
+    <h1>User Search (SQL Injection Demo)</h1>
+    <p>Search for users in the database.</p>
+    <form method="GET">
+        <label for="search">Username Search:</label>
+        <input type="text" id="search" name="search" placeholder="e.g. admin' OR '1'='1">
+        <button type="submit">Search</button>
+    </form>
+    <p>Executed query: <code>{{ query }}</code></p>
+    <h3>Results:</h3>
+    <ul>
+    {% for user in results %}
+        <li><strong>{{ user[0] }}</strong>: {{ user[1] }}</li>
+    {% else %}
+        <li>No users found.</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

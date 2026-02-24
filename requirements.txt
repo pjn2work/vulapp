@@ -1,0 +1,6 @@
+flask
+pyotp
+werkzeug
+flask-smorest
+marshmallow
+pyyaml

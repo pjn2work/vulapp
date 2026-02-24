@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head><title>Welcome</title></head>
+<body>
+    <h1>You are welcome!</h1>
+    <p>Logged in as: <b>{{ username|safe }}</b></p>
+    <p>(Vulnerable to reflected XSS via session data)</p>
+    <a href="/web/logout">Logout</a>
+</body>
+</html>

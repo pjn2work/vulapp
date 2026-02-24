@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head><title>Pentest Target Home</title></head>
+<body>
+    <h1>Pentest Lab - Choose Your Entry Point</h1>
+
+    <h2>WEB:</h2>
+
+    <p>Mandatory Header for these routes: <code>secret-header: my-secret-header</code></p>
+    <p>Credentials: <code>admin / easypassword</code> | Seed: <code>123456QA</code></p>
+
+    <h3>Web Authentication Scenarios:</h3>
+    <ul>
+        <li><a href="/web/login">1. Simple Login (User + Pass) - (SQLi Bypass)</a></li>
+        <li><a href="/web/login-2fa">2. Full 2FA Login (User + Pass + OTP)</a></li>
+        <li><a href="/web/logout">Logout</a></li>
+    </ul>
+    <h3>Required objects pages:</h3>
+    <ul>
+        <li><a href="/web/welcome-basic-auth">Requires Basic Auth</a></li>
+        <li><a href="/web/welcome-simple">Requires Login form: (User + Password) | Has cookie 'logged_in': true</a></li>
+        <li><a href="/web/welcome-2fa">Requires Login form with 2FA: (User + Password + 2FA) | Has cookie '2fa_logged_in': true</a></li>
+    </ul>
+    <h3>Original Vulnerable Tools:</h3>
+    <ul>
+        <li><a href="/web/users">User Search (SQL Injection) - requires 'secret-header'</a></li>
+        <li><a href="/web/ping">Ping Tool (Command Injection)</a></li>
+    </ul>
+
+    <hr>
+
+    <h2>API:</h2>
+    <ul>
+        <li><a href="/api/echo?p1=test">1. All HTTP Methods. Echo JSON with: headers, query paramenters and body</a></li>
+        <li><a href="/api/otp?seed=12345678">1. GET|POST Parameter 'seed' - Replies JSON with [OTP code, time remaining, b32 seed]</a></li>
+    </ul>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><title>Full 2FA Login</title></head>
+<body>
+    <h1>Full 2FA Login</h1>
+    <form method="POST">
+        <label>Username:</label> <input type="text" name="username"><br>
+        <label>Password:</label> <input type="password" name="password"><br>
+        <label>TOTP Code:</label> <input type="text" name="otp" required><br>
+        <button type="submit">Verify & Login</button>
+    </form>
+    <p>Seed: <b>XVQ2UIGO75XRUKJO</b></p>
+    <div>
+        <strong>{{ error_message }}</strong>
+    </div>
+</body>
+</html>
