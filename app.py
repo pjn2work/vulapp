@@ -93,6 +93,15 @@ def requires_secret_cookie(f):
         return f(*args, **kwargs)
     return decorated
 
+@app.before_request
+def log_welcome_requests():
+    pass
+    #if request.path.startswith('/web/welcome-'):
+    #    echo_data = __get_echo()
+    #    log_entry = f"--- {datetime.now()} | {request.path} ---\n{__dict2str(echo_data)}\n\n"
+    #    with open("welcome_requests.log", "a") as f:
+    #        f.write(log_entry)
+
 # --- ROUTES ---
 
 @app.route('/')
@@ -265,11 +274,15 @@ def __get_echo() -> dict:
     }
     
     # Print to logs/console
-    print("\n--- API ECHO REQUEST RECEIVED ---")
-    print(json.dumps(echo_data, indent=2))
-    print("--- END API ECHO ---\n")
+    print("\n--- API ECHO REQUEST RECEIVED ---", flush=True)
+    print(__dict2str(echo_data), flush=True)
+    print("--- END API ECHO ---\n", flush=True)
 
     return echo_data
+
+
+def __dict2str(d: dict) -> str:
+    return json.dumps(d, indent=2)
 
 
 if __name__ == '__main__':

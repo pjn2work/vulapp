@@ -10,25 +10,23 @@
 
     <h2>WEB:</h2>
 
-    <p>Credentials: <code>admin / easypassword</code></p>
-    <p>OTP Seed: <code>XVQ2UIGO75XRUKJO</code></p>
-    <p>Header: <code>secret-header: my-secret-header</code></p>
-    <p>Cookie: <code>secret-cookie: my-secret-cookie</code></p>
+    <p><strong>Credentials:</strong> <code>admin / easypassword</code></p>
+    <p><strong>OTP Seed:</strong> <code>XVQ2UIGO75XRUKJO</code></p>
+    <p><strong>Header:</strong> <code>secret-header: my-secret-header</code></p>
+    <p><strong>Cookie:</strong> <code>secret-cookie: my-secret-cookie</code></p>
 
     <h3>Web Authentication Forms:</h3>
     <ul>
-        <li><a href="/web/login">1. Simple Login (User + Pass) - (SQLi Bypass)</a></li>
-        <li><a href="/web/login-2fa">2. Full 2FA Login (User + Pass + OTP)</a></li>
+        <li><a href="/web/login">1. Login (User + Pass) - (SQLi Bypass)</a></li>
+        <li><a href="/web/login-2fa">2. Login + 2FA (User + Pass + OTP)</a></li>
         <li><a href="/web/logout">Logout</a></li>
     </ul>
 
     <h3>Required objects pages:</h3>
     <ul>
         <li><a href="/web/welcome-basic-auth">Requires Basic Auth</a></li>
-        <li><a href="/web/welcome-simple">Requires Session var - (User + Password) | Has session 'logged_in': true</a>
-        </li>
-        <li><a href="/web/welcome-2fa">Requires Session var - (User + Password + 2FA) | Has session '2fa_logged_in':
-                true</a></li>
+        <li><a href="/web/welcome-simple">Requires Session var - 'logged_in': true</a></li>
+        <li><a href="/web/welcome-2fa">Requires Session var - '2fa_logged_in': true</a></li>
         <li><a href="/web/welcome-header">Requires Header - 'secret-header': 'my-secret-header'</a></li>
         <li><a href="/web/welcome-cookie">Requires Cookie - 'secret-cookie'='my-secret-cookie'</a></li>
     </ul>
@@ -43,10 +41,8 @@
 
     <h2>API:</h2>
     <ul>
-        <li><a href="/api/echo?p1=test">1. All HTTP Methods. Echo JSON with: headers, query paramenters and body</a>
-        </li>
-        <li><a href="/api/otp?seed=XVQ2UIGO75XRUKJO">1. GET|POST Parameter 'seed' - Replies JSON with [OTP code, time
-                remaining, b32 seed]</a></li>
+        <li><a href="/api/echo?p1=test">1. All HTTP Methods. Echo JSON with: headers, query paramenters and body</a></li>
+        <li><a href="/api/otp?seed=XVQ2UIGO75XRUKJO">1. GET|POST /api/otp?seed=XVQ2UIGO75XRUKJO - returns JSON [OTP code, time_remaining, b32_seed]</a></li>
     </ul>
 </body>
 

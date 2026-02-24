@@ -19,6 +19,7 @@ EXPOSE 5000
 # Set environment variables
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=development
+ENV PYTHONUNBUFFERED=1
 
 # Run the application
 CMD ["python", "app.py"]
