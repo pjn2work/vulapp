@@ -95,12 +95,16 @@ def requires_secret_cookie(f):
 
 @app.before_request
 def log_welcome_requests():
-    pass
-    #if request.path.startswith('/web/welcome-'):
-    #    echo_data = __get_echo()
-    #    log_entry = f"--- {datetime.now()} | {request.path} ---\n{__dict2str(echo_data)}\n\n"
-    #    with open("welcome_requests.log", "a") as f:
-    #        f.write(log_entry)
+    if request.path.startswith('/web/welcome-'):
+        echo_data: str = __dict2str(__get_echo())
+
+        #log_entry = f"--- {datetime.now()} | {request.path} ---\n{echo_data}\n\n"
+        #with open("welcome_requests.log", "a") as f:
+        #    f.write(log_entry)
+        
+        print("\n--- WEB REQUEST RECEIVED ---", flush=True)
+        print(echo_data, flush=True)
+        print("--- END WEB ---\n", flush=True)
 
 # --- ROUTES ---
 
