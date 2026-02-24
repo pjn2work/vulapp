@@ -217,24 +217,7 @@ def logout():
 # 6. API Echo Endpoint
 @app.route('/api/echo', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def api_echo():
-    echo_data = {
-        "scheme": request.scheme,
-        "is_https": request.is_secure,
-        "full_url": request.url,
-        "path": request.path,
-        "method": request.method,
-        "headers": dict(request.headers),
-        "query_params": dict(request.args),
-        "payload": request.get_data(as_text=True),
-        "session": {k: v for k, v in session.items()},
-        "cookies": {k: v for k, v in request.cookies.items()}
-    }
-    
-    # Print to logs/console
-    print("\n--- API ECHO REQUEST RECEIVED ---")
-    print(json.dumps(echo_data, indent=2))
-    print("--- END API ECHO ---\n")
-    
+    echo_data = __get_echo()
     return echo_data, 200
 
 
@@ -265,6 +248,28 @@ def __get_otp(seed_b32_str: str = "") -> tuple[str, float, str]:
     if not totp.verify(code):
         raise ValueError(f"Seed string in b32 '{seed_b32_str} fails with code '{code}'")
     return code, time_remaining, seed_b32_str
+
+
+def __get_echo() -> dict:
+    echo_data = {
+        "scheme": request.scheme,
+        "is_https": request.is_secure,
+        "full_url": request.url,
+        "path": request.path,
+        "method": request.method,
+        "headers": dict(request.headers),
+        "query_params": dict(request.args),
+        "payload": request.get_data(as_text=True),
+        "session": {k: v for k, v in session.items()},
+        "cookies": {k: v for k, v in request.cookies.items()}
+    }
+    
+    # Print to logs/console
+    print("\n--- API ECHO REQUEST RECEIVED ---")
+    print(json.dumps(echo_data, indent=2))
+    print("--- END API ECHO ---\n")
+
+    return echo_data
 
 
 if __name__ == '__main__':

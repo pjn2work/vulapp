@@ -7,9 +7,12 @@
     <h2>WEB:</h2>
 
     <p>Mandatory Header for these routes: <code>secret-header: my-secret-header</code></p>
-    <p>Credentials: <code>admin / easypassword</code> | Seed: <code>123456QA</code></p>
+    <p>Credentials: <code>admin / easypassword</code></p>
+    <p>OTP seed: <code>XVQ2UIGO75XRUKJO</code></p>
+    <p>Header: <code>secret-header: my-secret-header</code></p>
+    <p>Cookie: <code>secret-cookie: my-secret-cookie</code></p>
 
-    <h3>Web Authentication Scenarios:</h3>
+    <h3>Web Authentication Forms:</h3>
     <ul>
         <li><a href="/web/login">1. Simple Login (User + Pass) - (SQLi Bypass)</a></li>
         <li><a href="/web/login-2fa">2. Full 2FA Login (User + Pass + OTP)</a></li>
@@ -18,12 +21,13 @@
     <h3>Required objects pages:</h3>
     <ul>
         <li><a href="/web/welcome-basic-auth">Requires Basic Auth</a></li>
-        <li><a href="/web/welcome-simple">Requires Login form: (User + Password) | Has cookie 'logged_in': true</a></li>
-        <li><a href="/web/welcome-2fa">Requires Login form with 2FA: (User + Password + 2FA) | Has cookie '2fa_logged_in': true</a></li>
+        <li><a href="/web/welcome-simple">Requires Session var -  (User + Password) | Has session 'logged_in': true</a></li>
+        <li><a href="/web/welcome-2fa">Requires Session var - (User + Password + 2FA) | Has session '2fa_logged_in': true</a></li>
+        <li><a href="/web/welcome-cookie">Requires Cookie - 'secret-cookie'='my-secret-cookie'</a></li>
     </ul>
     <h3>Original Vulnerable Tools:</h3>
     <ul>
-        <li><a href="/web/users">User Search (SQL Injection) - requires 'secret-header'</a></li>
+        <li><a href="/web/users">Requires Secret Header - User Search (SQL Injection)</a></li>
         <li><a href="/web/ping">Ping Tool (Command Injection)</a></li>
     </ul>
 
