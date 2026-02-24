@@ -21,7 +21,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # for requires_header
 SECRET_HEADER_NAME = "secret-header"
 SECRET_HEADER_VALUE = "my-secret-header"
-# for requires_cookie
+# for requires_secret_cookie
 SECRET_COOKIE_NAME = "secret-cookie"
 SECRET_COOKIE_VALUE = "my-secret-cookie"
 # for login_2fa
@@ -78,17 +78,18 @@ def requires_2fa_session(f):
 def requires_secret_header(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if request.headers.get(SECRET_HEADER_NAME, '') != SECRET_HEADER_VALUE:
-            return f"Missing or invalid header {SECRET_HEADER_NAME}: {SECRET_HEADER_VALUE}.", 403
+        header_value = request.headers.get(SECRET_HEADER_NAME, '')
+        if header_value != SECRET_HEADER_VALUE:
+            return f"You must set header {SECRET_HEADER_NAME}: {SECRET_HEADER_VALUE} - (received '{header_value}')", 500
         return f(*args, **kwargs)
     return decorated
 
-def requires_cookie(f):
+def requires_secret_cookie(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         cookie_value = request.cookies.get(SECRET_COOKIE_NAME, '')
         if cookie_value != SECRET_COOKIE_VALUE:
-            return f"You must login first or set cookie {SECRET_COOKIE_NAME}={SECRET_COOKIE_VALUE}! Using the /web/login", 401
+            return f"You must set cookie {SECRET_COOKIE_NAME}={SECRET_COOKIE_VALUE} - (received '{cookie_value}')", 500
         return f(*args, **kwargs)
     return decorated
 
@@ -106,21 +107,16 @@ def login_simple():
         username = request.form.get('username', '')
         password = request.form.get('password', '')
         
-        # VULNERABLE: Direct string interpolation allows SQL Injection Bypass
-        query = f"SELECT username FROM users WHERE username = '{username}' AND password = '{password}'"
-        
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
+        # Verify Credentials
+        if username == USERNAME and password == PASSWORD:
             try:
-                user = cursor.execute(query).fetchone()
-                if user:
-                    session['username'] = user[0]
-                    session['logged_in'] = True
-                    response = make_response(redirect(url_for('welcome_simple')))
-                    response.set_cookie(SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE)
-                    return response
-            except Exception as e:
-                return render_template('login_simple.html', error_message=f"Database Error: {str(e)}<br>Query: {query}"), 500
+                session['username'] = username
+                session['logged_in'] = True
+                response = make_response(redirect(url_for('welcome_simple')))
+                #response.set_cookie(SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE)
+                return response
+            except Exception as ex:
+                return render_template('login_simple.html', error_message=f"Error: {str(ex)}"), 500
         
         return render_template('login_simple.html', error_message="Invalid credentials."), 401
     return render_template('login_simple.html')
@@ -134,7 +130,7 @@ def login_2fa():
         password = request.form.get('password')
         otp = request.form.get('otp', '')
         
-        # Verify Password (Safe check for this demo)
+        # Verify Credentials
         if username == USERNAME and password == PASSWORD:
             try:
                 totp = pyotp.TOTP(TOTP_SEED)
@@ -142,7 +138,7 @@ def login_2fa():
                     session['username'] = username
                     session['2fa_logged_in'] = True
                     response = make_response(redirect(url_for('welcome_2fa')))
-                    response.set_cookie(SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE)
+                    #response.set_cookie(SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE)
                     return response
                 return render_template('login_2fa.html', error_message=f"Invalid 2FA code '{otp}' for seed {TOTP_SEED}"), 401
             except Exception as ex:
@@ -152,13 +148,15 @@ def login_2fa():
     return render_template('login_2fa.html')
 
 
+### Test URLs
+
 # 1. Basic Auth Page
 @app.route('/web/welcome-basic-auth')
 @requires_basic_auth
 def basic_auth_login():
     auth = request.authorization
     username = auth.username
-    return f"<h1>You are welcome {username}!</h1><p>You have successfully logged using basic-auth.</p>"
+    return f"<h1>You are welcome {username}!</h1><p>You have successfully logged in using basic-auth.</p>"
 
 @app.route('/web/welcome-simple')
 @requires_session
@@ -174,16 +172,19 @@ def welcome_2fa():
     username = session.get('username', '!NOT FOUND!')
     return f"<h1>You are welcome {username}!</h1><p>You have successfully logged in with 2FA.</p>"
 
+@app.route('/web/welcome-header')
+@requires_secret_header
+def welcome_header():
+    return f"<h1>You are welcome!</h1><p>You have the required header {SECRET_HEADER_NAME}: {SECRET_HEADER_VALUE}.</p>"
+
 @app.route('/web/welcome-cookie')
-@requires_2fa_session
+@requires_secret_cookie
 def welcome_cookie():
-    username = session.get('username', '!NOT FOUND!')
-    return f"<h1>You are welcome {username}!</h1><p>You have the required cookie {SECRET_COOKIE_NAME} = {SECRET_COOKIE_VALUE}.</p>"
+    return f"<h1>You are welcome!</h1><p>You have the required cookie {SECRET_COOKIE_NAME} = {SECRET_COOKIE_VALUE}.</p>"
 
 
 # 4. Re-added Original Users Page (SQLi)
 @app.route('/web/users')
-@requires_secret_header
 def users():
     search = request.args.get('search', '')
     query = f"SELECT username, bio FROM users WHERE username LIKE '%{search}%'"
@@ -198,7 +199,6 @@ def users():
 
 # 5. Re-added Original Ping Page (Command Injection)
 @app.route('/web/ping')
-@requires_secret_header
 def ping():
     host = request.args.get('host', '')
     output = ""
