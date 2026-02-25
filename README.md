@@ -33,26 +33,26 @@ These pages require specific authentication or headers to access. All `/web/welc
 | `/web/welcome-cookie` | **Cookie**: `secret-cookie=my-secret-cookie` |
 
 ### Vulnerable Tools
-*   **`/web/users`**: User search tool. Vulnerable to **SQL Injection** via the `search` query parameter.
+*   **`/api/v1/users/<user_id>`**: User search API. Vulnerable to **SQL Injection** via the `user_id` path parameter.
 *   **`/web/ping`**: Network utility. Vulnerable to **Command Injection** via the `host` query parameter.
 
 ### API Endpoints
-*   **`/api/echo`**: Reflects all request data (headers, params, body, cookies, session) in JSON format.
-*   **`/api/v1/otp`**: TOTP utility.
+*   **`/swagger-ui`**: Interactive Swagger documentation for the API.
+*   **`/openapi.json`**: Raw OpenAPI specification.
+*   **`/api/tools/echo`**: Echos back all request data (headers, params, body, cookies, session) in JSON format.
+*   **`/api/tools/otp`**: TOTP utility.
     *   **Usage:** `GET` (query params) or `POST` (form data) with `seed` parameter.
     *   **Returns:** JSON containing current code, time remaining, and the seed.
 *   **`/api/v1/header-cookie`**: API protected by both a secret header and a secret cookie.
 *   **`/api/v1/header-cookie-auth`**: API protected by Basic Auth, a secret header, and a secret cookie.
-*   **`/swagger-ui`**: Interactive Swagger documentation for the API.
-*   **`/openapi.json`**: Raw OpenAPI specification.
+*   **`/api/v1/users/<user_id>`**: API version of the user search tool. Vulnerable to **SQL Injection**.
 
 ---
 
 ## Logging and Monitoring
 
 ### File Logs
-Requests to `/web/welcome-` endpoints are recorded inside the container at:
-`/app/welcome_requests.log`
+Requests to `/web/welcome-` or `/api/v1/` endpoints are printed to stdout.
 
 ---
 

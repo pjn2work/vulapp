@@ -26,6 +26,10 @@ class OtpResponseSchema(ma.Schema):
     time_remaining = ma.fields.Float(metadata={"description": "Seconds until the code expires"})
     seed_b32_str = ma.fields.String(metadata={"description": "The seed used (generated if not provided)"})
 
+class UserSearchArgsSchema(ma.Schema):
+    user_id = ma.fields.String(metadata={"description": "User ID to search for"})
+
+
 # OpenAPI / Swagger configuration
 app.config["API_TITLE"] = "Vulnerable App API"
 app.config["API_VERSION"] = "v1"
@@ -104,7 +108,7 @@ def requires_secret_header(f):
     def decorated(*args, **kwargs):
         header_value = request.headers.get(SECRET_HEADER_NAME, '')
         if header_value != SECRET_HEADER_VALUE:
-            return f"You must set header {SECRET_HEADER_NAME}: {SECRET_HEADER_VALUE} - (received '{header_value}')", 500
+            return f"You must set header {SECRET_HEADER_NAME}: {SECRET_HEADER_VALUE} - (received '{header_value}')", 501
         return f(*args, **kwargs)
     return decorated
 
@@ -113,7 +117,7 @@ def requires_secret_cookie(f):
     def decorated(*args, **kwargs):
         cookie_value = request.cookies.get(SECRET_COOKIE_NAME, '')
         if cookie_value != SECRET_COOKIE_VALUE:
-            return f"You must set cookie {SECRET_COOKIE_NAME}={SECRET_COOKIE_VALUE} - (received '{cookie_value}')", 500
+            return f"You must set cookie {SECRET_COOKIE_NAME}={SECRET_COOKIE_VALUE} - (received '{cookie_value}')", 502
         return f(*args, **kwargs)
     return decorated
 
@@ -122,6 +126,7 @@ def log_requests():
     if request.path.startswith('/web/welcome-') or request.path.startswith('/api/v1/'):
         echo_data: str = _dict2str(_get_echo())
 
+        # Log to file
         #log_entry = f"--- {datetime.now()} | {request.path} ---\n{echo_data}\n\n"
         #with open("welcome_requests.log", "a") as f:
         #    f.write(log_entry)
@@ -220,21 +225,7 @@ def welcome_cookie():
     return f"<h1>You are welcome!</h1><p>You have the required cookie {SECRET_COOKIE_NAME} = {SECRET_COOKIE_VALUE}.</p>"
 
 
-# 4. Re-added Original Users Page (SQLi)
-@app.route('/web/users')
-def users():
-    search = request.args.get('search', '')
-    query = f"SELECT username, bio FROM users WHERE username LIKE '%{search}%'"
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        try:
-            results = cursor.execute(query).fetchall()
-        except Exception as e:
-            return f"Database error: {str(e)}", 500
-    return render_template('users.html', results=results, query=query)
-
-
-# 5. Re-added Original Ping Page (Command Injection)
+# 4. Re-added Original Ping Page (Command Injection)
 @app.route('/web/ping')
 def ping():
     host = request.args.get('host', '')
@@ -254,14 +245,14 @@ def logout():
 
 ### API Endpoints
 
-# 6. API TOOLS - Echo Endpoint
-@api_blp.route('/echo', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+# API TOOLS - Echo Endpoint
+@api_blp.route('/tools/echo', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def api_echo():
     echo_data = _get_echo()
     return echo_data, 200
 
-# 7. API 2FA OTP Endpoint
-@api_blp.route('/v1/otp')
+# API 2FA OTP Endpoint
+@api_blp.route('/tools/otp')
 class Otp(MethodView):
     @api_blp.arguments(OtpArgsSchema, location="query")
     @api_blp.response(200, OtpResponseSchema)
@@ -288,7 +279,7 @@ class Otp(MethodView):
         except Exception as err:
             return {"message": str(err)}, 400
 
-# 8. API Protected by Header + Cookie
+# 5. API Protected by Header + Cookie
 @api_blp.route('/v1/header-cookie', methods=['GET'])
 @requires_secret_header
 @requires_secret_cookie
@@ -300,7 +291,7 @@ def api_secret_header_cookie():
     }
     return data, 200
 
-# 9. API Protected by BasicAuth + Header + Cookie
+# 6. API Protected by BasicAuth + Header + Cookie
 @api_blp.route('/v1/header-cookie-auth', methods=['GET'])
 @requires_basic_auth
 @requires_secret_header
@@ -317,6 +308,23 @@ def api_secret_header_cookie_basic_auth():
         "info": "You've found the static headers+cookies with basic auth thresure",
     }
     return data, 200
+
+
+# 7. User Search API (SQLi)
+@api_blp.route('/v1/users/<user_id>')
+@api_blp.arguments(UserSearchArgsSchema, location="path")
+@api_blp.response(200)
+def users(args, user_id):
+    query = f"SELECT id, username, bio FROM users WHERE id = {user_id}"
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        try:
+            results = cursor.execute(query).fetchall()
+            if len(results) == 0:
+                return {"error": "No result found in DB.", "query": query}, 404
+        except Exception as e:
+            return {"error": f"Database error: {str(e)}", "query": query}, 500
+    return {"results": results, "query": query}
 
 
 def _get_otp(seed_b32_str: str = "") -> tuple[str, float, str]:

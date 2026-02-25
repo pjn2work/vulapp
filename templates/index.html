@@ -8,7 +8,7 @@
 <body>
     <h1>Pentest Lab - Choose Your Entry Point</h1>
 
-    <h2>WEB:</h2>
+    <h2># WEB:</h2>
 
     <p><strong>Credentials:</strong> <code>admin / easypassword</code></p>
     <p><strong>OTP Seed:</strong> <code>XVQ2UIGO75XRUKJO</code></p>
@@ -33,21 +33,30 @@
 
     <h3>Original Vulnerable Tools:</h3>
     <ul>
-        <li><a href="/web/users">User Search (SQL Injection)</a></li>
         <li><a href="/web/ping">Ping Tool (Command Injection)</a></li>
+        <li><a href="/api/v1/users/1">User Search API (SQL Injection)</a></li>
     </ul>
 
     <hr>
 
-    <h2>API:</h2>
-    <ul>
+    <h2># API:</h2>
+
+    <h3>OpenAPI</h3>
+    <ul>        
         <li><a href="/swagger-ui"><b>Interactive API Documentation (Swagger UI)</b></a></li>
         <li><a href="/openapi.json"><b>OpenAPI JSON file</b></a></li>
+    </ul>
         
-        <li><a href="/api/echo?p1=test">1. All HTTP Methods. Echo JSON with: headers, query paramenters and body</a></li>
-        <li><a href="/api/v1/otp?seed=XVQ2UIGO75XRUKJO">2. GET|POST /api/v1/otp?seed=XVQ2UIGO75XRUKJO - returns JSON [OTP code, time_remaining, b32_seed]</a></li>
-        <li><a href="/api/v1/header-cookie">3. GET /api/v1/header-cookie (Requires secret header + cookie)</a></li>
-        <li><a href="/api/v1/header-cookie-auth">4. GET /api/v1/header-cookie-auth (Requires Basic Auth + secret header + cookie)</a></li>
+    <h3>Tools</h3>
+    <ul>        
+        <li><a href="/api/tools/echo?p1=test">All HTTP Methods. Echo JSON with: headers, query paramenters and body</a></li>
+        <li><a href="/api/tools/otp?seed=XVQ2UIGO75XRUKJO">GET|POST /api/v1/otp?seed=XVQ2UIGO75XRUKJO - returns JSON [OTP code, time_remaining, b32_seed]</a></li>
+    </ul>
+        
+    <h3>Testing</h3>
+    <ul>                
+        <li><a href="/api/v1/header-cookie">GET /api/v1/header-cookie (Requires secret header + cookie)</a></li>
+        <li><a href="/api/v1/header-cookie-auth">GET /api/v1/header-cookie-auth (Requires Basic Auth + secret header + cookie)</a></li>
     </ul>
 </body>
 
