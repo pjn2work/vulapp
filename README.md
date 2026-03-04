@@ -11,6 +11,7 @@ To perform your pentests, use the following known values:
 *   **TOTP Seed:** `XVQ2UIGO75XRUKJO`
 *   **Secret Header:** `secret-header: my-secret-header`
 *   **Secret Cookie:** `secret-cookie: my-secret-cookie`
+*   **Bearer Token Header:** `token: Bearer Sf54F-/f#${wf}!*aR.y%`
 
 ---
 
@@ -46,6 +47,9 @@ These pages require specific authentication or headers to access. All `/web/welc
 *   **`/api/v1/header-cookie`**: API protected by both a secret header and a secret cookie.
 *   **`/api/v1/header-cookie-auth`**: API protected by Basic Auth, a secret header, and a secret cookie.
 *   **`/api/v1/users/<user_id>`**: API version of the user search tool. Vulnerable to **SQL Injection**.
+*   **`/api/v1/get-token`**: Authenticates with JSON payload and returns a Bearer token.
+*   **`/api/v1/get-token-form`**: Authenticates with Form data and returns a Bearer token.
+*   **`/api/v1/is-valid-token`**: Validates the Bearer token in the `token` header.
 
 ---
 

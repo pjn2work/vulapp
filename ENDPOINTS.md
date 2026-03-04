@@ -27,6 +27,22 @@ This document provides a detailed overview of all endpoints available in the app
 | `/api/v1/header-cookie` | `GET` | **Header**: `secret-header: my-secret-header`<br>**Cookie**: `secret-cookie=my-secret-cookie` | Returns request metadata. | `200 OK`, `501 Header Error`, `502 Cookie Error` | `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Credentials: True` |
 | `/api/v1/header-cookie-auth` | `GET` | **Basic Auth**: `admin`/`easypassword`<br>**Header**: `secret-header: my-secret-header`<br>**Cookie**: `secret-cookie=my-secret-cookie` | Returns request metadata including auth. | `200 OK`, `401 Unauthorized`, `501/502 Error` | None |
 | `/api/v1/users/<user_id>` | `GET` | **Path Variable**: `user_id` | User search API. **Vulnerable to SQL Injection** via `user_id`. | `200 OK`, `404 Not Found`, `500 DB Error` | None |
+| `/api/v1/get-token` | `POST` | **JSON**: `{"auth": {"username": "admin", "password": "easypassword"}}` | Authenticates and returns a Bearer token. | `200 OK`, `400 Unauthorized` | None |
+| `/api/v1/get-token-form` | `POST` | **Form Data**: `username`, `password` | Authenticates via form data and returns a Bearer token. | `200 OK`, `400 Unauthorized` | None |
+| `/api/v1/is-valid-token` | `GET`, `POST` | **Header**: `token: Bearer Sf54F-/f#${wf}!*aR.y%` | Validates the provided Bearer token. | `200 OK`, `501 Invalid Token` | None |
+
+## API Response Examples
+
+### Successful Authentication (`/api/v1/get-token` and `/api/v1/get-token-form`)
+Returns a `200 OK` status with the following JSON structure:
+```json
+{
+  "reply": {
+    "token": "Sf54F-/f#${wf}!*aR.y%",
+    "prefix": "Bearer"
+  }
+}
+```
 
 ## API Documentation
 
@@ -42,3 +58,4 @@ This document provides a detailed overview of all endpoints available in the app
 - **TOTP Seed:** `XVQ2UIGO75XRUKJO`
 - **Secret Header:** `secret-header: my-secret-header`
 - **Secret Cookie:** `secret-cookie: my-secret-cookie`
+- **Bearer Token Header:** `token: Bearer Sf54F-/f#${wf}!*aR.y%`
