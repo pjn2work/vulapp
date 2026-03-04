@@ -29,6 +29,21 @@ class OtpResponseSchema(ma.Schema):
 class UserSearchArgsSchema(ma.Schema):
     user_id = ma.fields.String(metadata={"description": "User ID to search for"})
 
+### For token end-points
+class AuthSchema(ma.Schema):
+    username = ma.fields.String(required=True)
+    password = ma.fields.String(required=True)
+
+class GetTokenArgsSchema(ma.Schema):
+    auth = ma.fields.Nested(AuthSchema, required=True)
+
+class TokenReplySchema(ma.Schema):
+    token = ma.fields.String()
+    prefix = ma.fields.String()
+
+class GetTokenResponseSchema(ma.Schema):
+    reply = ma.fields.Nested(TokenReplySchema)
+
 
 # OpenAPI / Swagger configuration
 app.config["API_TITLE"] = "Vulnerable App API"
@@ -59,6 +74,8 @@ DATABASE = 'pentest_target.db'
 # for all logins
 USERNAME = 'admin'
 PASSWORD = 'easypassword'
+TOKEN = "Sf54F-/f#${wf}!*aR.y%"
+PREFIX = "Bearer"
 
 
 def init_db():
@@ -82,7 +99,7 @@ def requires_basic_auth(f):
         if not auth or not (auth.username == USERNAME and auth.password == PASSWORD):
             return make_response(
                 'Could not verify your access level for that URL.\n'
-                'You have to login with proper credentials', 401,
+                'You have to login with proper credentials', 406,
                 {'WWW-Authenticate': 'Basic realm="Login Required"'})
         return f(*args, **kwargs)
     return decorated
@@ -91,7 +108,7 @@ def requires_session(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('logged_in'):
-            return f"You must login first! Using the /web/login address", 401
+            return f"You must login first! Using the /web/login address", 402
         return f(*args, **kwargs)
     return decorated
 
@@ -99,7 +116,7 @@ def requires_2fa_session(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('2fa_logged_in'):
-            return "You must login first! Using the /web/login-2fa address", 401
+            return "You must login first! Using the /web/login-2fa address", 403
         return f(*args, **kwargs)
     return decorated
 
@@ -108,7 +125,14 @@ def requires_secret_header(f):
     def decorated(*args, **kwargs):
         header_value = request.headers.get(SECRET_HEADER_NAME, '')
         if header_value != SECRET_HEADER_VALUE:
-            return f"You must set header {SECRET_HEADER_NAME}: {SECRET_HEADER_VALUE} - (received '{header_value}')", 501
+            return (
+                f"You must set header {SECRET_HEADER_NAME}: {SECRET_HEADER_VALUE} - (received '{header_value}')",
+                501,
+                {
+                    'Access-Control-Allow-Origin': '*',
+                    #'Access-Control-Allow-Credentials': True
+                }
+            )
         return f(*args, **kwargs)
     return decorated
 
@@ -117,7 +141,26 @@ def requires_secret_cookie(f):
     def decorated(*args, **kwargs):
         cookie_value = request.cookies.get(SECRET_COOKIE_NAME, '')
         if cookie_value != SECRET_COOKIE_VALUE:
-            return f"You must set cookie {SECRET_COOKIE_NAME}={SECRET_COOKIE_VALUE} - (received '{cookie_value}')", 502
+            return (
+                f"You must set cookie {SECRET_COOKIE_NAME}={SECRET_COOKIE_VALUE} - (received '{cookie_value}')",
+                502,
+                {
+                    'Access-Control-Allow-Origin': '*',
+                    #'Access-Control-Allow-Credentials': True
+                }
+            )
+        return f(*args, **kwargs)
+    return decorated
+
+def requires_auth_token(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        header_value = request.headers.get('token', '')
+        if header_value != PREFIX + " " + TOKEN:
+            return (
+                f"You must get your token from /api/v1/get-token \n--received '{header_value}'\ninstead of '{PREFIX} {TOKEN}'",
+                501
+            )
         return f(*args, **kwargs)
     return decorated
 
@@ -220,9 +263,23 @@ def welcome_header():
     return f"<h1>You are welcome!</h1><p>You have the required header {SECRET_HEADER_NAME}: {SECRET_HEADER_VALUE}.</p>"
 
 @app.route('/web/welcome-cookie')
-@requires_secret_cookie
+#@requires_secret_cookie
 def welcome_cookie():
-    return f"<h1>You are welcome!</h1><p>You have the required cookie {SECRET_COOKIE_NAME} = {SECRET_COOKIE_VALUE}.</p>"
+    response = f'<h1>You are welcome!</h1><p>You have the required cookie {SECRET_COOKIE_NAME} = {SECRET_COOKIE_VALUE}.</p>'
+    response += """This script bellow will call 
+        <a href="https://vulapi.pjn.ddns.net/api/v1/header-cookie">https://vulapi.pjn.ddns.net/api/v1/header-cookie</a>
+        <script type="text/javascript">
+            function reqListener() {
+                console.log(this.responseText);
+            }
+            const req = new XMLHttpRequest();
+            req.addEventListener("load", reqListener);
+            req.open("GET", "https://vulapi.pjn.ddns.net/api/v1/header-cookie");
+            //req.withCredentials = true;
+            req.send();
+        </script>
+    """
+    return response
 
 
 # 4. Re-added Original Ping Page (Command Injection)
@@ -289,7 +346,10 @@ def api_secret_header_cookie():
         "cookies": request.cookies,
         "info": "You've found the static headers+cookies thresure",
     }
-    return data, 200
+    return data, 200, {
+            'Access-Control-Allow-Origin': '*',
+            #'Access-Control-Allow-Credentials': True
+        }
 
 # 6. API Protected by BasicAuth + Header + Cookie
 @api_blp.route('/v1/header-cookie-auth', methods=['GET'])
@@ -325,6 +385,52 @@ def users(args, user_id):
         except Exception as e:
             return {"error": f"Database error: {str(e)}", "query": query}, 500
     return {"results": results, "query": query}
+
+
+# Get Auth Token with JSON payload
+@api_blp.route('/v1/get-token', methods=['POST'])
+@api_blp.arguments(GetTokenArgsSchema, location="json")
+@api_blp.response(200, GetTokenResponseSchema)
+def get_token(args):
+    """
+    {
+       "auth": {
+           "username": "admin",
+           "password": "easypassword"
+       }
+    }
+    """
+    auth = args.get('auth', {})
+    if auth.get('username') == USERNAME and auth.get('password') == PASSWORD:
+        return {
+            "reply": {
+                "token": TOKEN,
+                "prefix": PREFIX,
+            }
+        }, 200
+    return {"message": "Invalid Token JSON credentials"}, 400
+
+
+# Get Auth Token with Form payload
+@api_blp.route('/v1/get-token-form', methods=['POST'])
+@api_blp.arguments(AuthSchema, location="form")
+@api_blp.response(200, GetTokenResponseSchema)
+def get_token_form(args):
+    if args.get('username') == USERNAME and args.get('password') == PASSWORD:
+        return {
+            "reply": {
+                "token": TOKEN,
+                "prefix": PREFIX,
+            }
+        }, 200
+    return {"message": "Invalid Token form credentials"}, 400
+
+
+# Validate Auth Token
+@api_blp.route('/v1/is-valid-token', methods=['GET', 'POST'])
+@requires_auth_token
+def good_token():
+    return {"message": "You've go the correct token!"}, 200
 
 
 def _get_otp(seed_b32_str: str = "") -> tuple[str, float, str]:
