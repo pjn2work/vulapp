@@ -1,7 +1,7 @@
-
 import sqlite3
 import os
 import pyotp
+import base64
 import subprocess
 import json
 from functools import wraps
@@ -19,12 +19,14 @@ app.secret_key = 'super-secret-key-for-sessions'
 # --- SCHEMAS ---
 
 class OtpArgsSchema(ma.Schema):
-    seed = ma.fields.String(metadata={"description": "Base32 seed for TOTP generation"})
+    seed_b32 = ma.fields.String(metadata={"description": "Base32 seed for TOTP generation"})
+    seed_hex = ma.fields.String(metadata={"description": "Hex seed for TOTP generation"})
 
 class OtpResponseSchema(ma.Schema):
-    code = ma.fields.String(metadata={"description": "The generated TOTP code"})
+    otp_code = ma.fields.String(metadata={"description": "The generated TOTP code"})
     time_remaining = ma.fields.Float(metadata={"description": "Seconds until the code expires"})
-    seed_b32_str = ma.fields.String(metadata={"description": "The seed used (generated if not provided)"})
+    seed_b32 = ma.fields.String(metadata={"description": "The seed used in base32 (generated if not provided)"})
+    seed_hex = ma.fields.String(metadata={"description": "The seed used in hex (generated if not provided)"})
 
 class UserSearchArgsSchema(ma.Schema):
     user_id = ma.fields.String(metadata={"description": "User ID to search for"})
@@ -315,24 +317,22 @@ class Otp(MethodView):
     @api_blp.response(200, OtpResponseSchema)
     def get(self, args):
         """Get TOTP code via query parameter"""
-        seed = args.get('seed', '')
-        return self._process(seed)
+        seed_b32 = args.get('seed_b32', '')
+        seed_hex = args.get('seed_hex', '')
+        return self._process(seed_b32, seed_hex)
 
     @api_blp.arguments(OtpArgsSchema, location="form")
     @api_blp.response(200, OtpResponseSchema)
     def post(self, args):
         """Get TOTP code via form data"""
-        seed = args.get('seed', '')
-        return self._process(seed)
+        seed_b32 = args.get('seed_b32', '')
+        seed_hex = args.get('seed_hex', '')
+        return self._process(seed_b32, seed_hex)
 
-    def _process(self, seed):
+    def _process(self, seed_b32: str, seed_hex: str):
         try:
-            code, time_remaining, seed_b32_str = _get_otp(seed)
-            return {
-                "code": code,
-                "time_remaining": time_remaining,
-                "seed_b32_str": seed_b32_str,
-            }
+            result = _get_otp(seed_b32, seed_hex)
+            return result
         except Exception as err:
             return {"message": str(err)}, 400
 
@@ -433,18 +433,51 @@ def good_token():
     return {"message": "You've go the correct token!"}, 200
 
 
-def _get_otp(seed_b32_str: str = "") -> tuple[str, float, str]:
-    if not seed_b32_str:
-        seed_b32_str = pyotp.random_base32()
-    totp = pyotp.TOTP(seed_b32_str)
-    code = totp.now()
+def _get_otp(seed_b32: str = "", seed_hex: str = "") -> dict:
+    """
+    Generate OTP code from seed in base32 or hex format.
+
+    Args:
+        seed_b32: OTP seed as base32 string
+        seed_hex: OTP seed as hex string (plain text, not bytes)
+
+    Returns:
+        dict with keys: seed_b32, seed_hex, otp_code, time_remaining
+    """
+    # If both are None, generate a new seed
+    if len(seed_b32) + len(seed_hex) == 0:
+        seed_b32 = pyotp.random_base32()
+
+    # If only seed_hex is None, convert from seed_b32
+    if seed_hex == "":
+        # Add padding if needed for base32 decoding
+        padding = (8 - len(seed_b32) % 8) % 8
+        seed_b32_padded = seed_b32 + '=' * padding
+        seed_bytes = base64.b32decode(seed_b32_padded)
+        seed_hex = seed_bytes.hex()
+
+    # If only seed_b32 is None, convert from seed_hex
+    if seed_b32 == "":
+        seed_bytes = bytes.fromhex(seed_hex)
+        seed_b32 = base64.b32encode(seed_bytes).decode('utf-8').rstrip('=')
+
+    # Generate OTP code using the base32 seed
+    totp = pyotp.TOTP(seed_b32)
+    otp_code = totp.now()
     time_remaining = (totp.interval - datetime.now().timestamp()) % totp.interval
+
     if time_remaining < 3.0:
         sleep(time_remaining)
-        return _get_otp(seed_b32_str=seed_b32_str)
-    if not totp.verify(code):
-        raise ValueError(f"Seed string in b32 '{seed_b32_str} fails with code '{code}'")
-    return code, time_remaining, seed_b32_str
+        return _get_otp(seed_b32=seed_b32, seed_hex=seed_hex)
+    if not totp.verify(otp_code):
+        raise ValueError(f"Seed string b32='{seed_b32}' and hex='{seed_hex}' fails with otp code '{otp_code}'")
+
+    return {
+        'seed_b32': seed_b32,
+        'seed_hex': seed_hex,
+        'otp_code': otp_code,
+        'time_remaining': time_remaining
+    }
 
 
 def _get_echo() -> dict:

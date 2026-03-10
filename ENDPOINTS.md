@@ -22,13 +22,13 @@ This document provides a detailed overview of all endpoints available in the app
 | Endpoint | Method | Requirements | Description / Response | Status Codes | Headers |
 | :--- | :---: | :--- | :--- | :---: | :--- |
 | `/api/tools/echo` | Any | None | Returns all request data (headers, params, body, etc.). | `200 OK` | None |
-| `/api/tools/otp` | `GET` | **Query Param**: `seed` (optional) | Generates TOTP code for the provided seed. | `200 OK`, `400 Error` | None |
-| `/api/tools/otp` | `POST` | **Form Data**: `seed` (optional) | Generates TOTP code for the provided seed. | `200 OK`, `400 Error` | None |
+| `/api/tools/otp` | `GET` | **Query Param**: `seed_b32` or `seed_hex` (optional) | Generates TOTP code for the provided seed. | `200 OK`, `400 Error` | None |
+| `/api/tools/otp` | `POST` | **Form Data**: `seed_b32` or `seed_hex` (optional) | Generates TOTP code for the provided seed. | `200 OK`, `400 Error` | None |
 | `/api/v1/header-cookie` | `GET` | **Header**: `secret-header: my-secret-header`<br>**Cookie**: `secret-cookie=my-secret-cookie` | Returns request metadata. | `200 OK`, `501 Header Error`, `502 Cookie Error` | `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Credentials: True` |
 | `/api/v1/header-cookie-auth` | `GET` | **Basic Auth**: `admin`/`easypassword`<br>**Header**: `secret-header: my-secret-header`<br>**Cookie**: `secret-cookie=my-secret-cookie` | Returns request metadata including auth. | `200 OK`, `401 Unauthorized`, `501/502 Error` | None |
 | `/api/v1/users/<user_id>` | `GET` | **Path Variable**: `user_id` | User search API. **Vulnerable to SQL Injection** via `user_id`. | `200 OK`, `404 Not Found`, `500 DB Error` | None |
 | `/api/v1/get-token` | `POST` | **JSON**: `{"auth": {"username": "admin", "password": "easypassword"}}` | Authenticates and returns a Bearer token. | `200 OK`, `400 Unauthorized` | None |
-| `/api/v1/get-token-form` | `POST` | **Form Data**: `username`, `password` | Authenticates via form data and returns a Bearer token. | `200 OK`, `400 Unauthorized` | None |
+| `/api/v1/get-token-form` | `POST` | **Form Data**: `username=admin&password=easypassword` | Authenticates via form data and returns a Bearer token. | `200 OK`, `400 Unauthorized` | None |
 | `/api/v1/is-valid-token` | `GET`, `POST` | **Header**: `token: Bearer Sf54F-/f#${wf}!*aR.y%` | Validates the provided Bearer token. | `200 OK`, `501 Invalid Token` | None |
 
 ## API Response Examples

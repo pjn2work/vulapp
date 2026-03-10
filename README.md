@@ -42,7 +42,7 @@ These pages require specific authentication or headers to access. All `/web/welc
 *   **`/openapi.json`**: Raw OpenAPI specification.
 *   **`/api/tools/echo`**: Echos back all request data (headers, params, body, cookies, session) in JSON format.
 *   **`/api/tools/otp`**: TOTP utility.
-    *   **Usage:** `GET` (query params) or `POST` (form data) with `seed` parameter.
+    *   **Usage:** `GET` (query params) or `POST` (form data) with `seed_b32` or `seed_hex` parameter.
     *   **Returns:** JSON containing current code, time remaining, and the seed.
 *   **`/api/v1/header-cookie`**: API protected by both a secret header and a secret cookie.
 *   **`/api/v1/header-cookie-auth`**: API protected by Basic Auth, a secret header, and a secret cookie.
