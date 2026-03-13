@@ -208,3 +208,8 @@ __marimo__/
 
 # Claude
 .claude/
+
+# VulApp specific
+uploads/
+pentest_target.db
+upload_tracker.json
