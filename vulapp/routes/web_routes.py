@@ -1,6 +1,5 @@
 """Web routes for the vulnerable application."""
 import os
-import json
 from datetime import datetime
 from pathlib import Path
 import subprocess
@@ -8,59 +7,15 @@ import pyotp
 from flask import Blueprint, request, render_template, redirect, url_for, session, make_response, jsonify, send_from_directory
 from vulapp.auth import requires_basic_auth, requires_session, requires_2fa_session, requires_secret_header, requires_secret_cookie
 from vulapp.config import USERNAME, PASSWORD, TOTP_SEED, SECRET_HEADER_NAME, SECRET_HEADER_VALUE, SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE
+from vulapp.tracker import (
+    get_client_ip, get_upload_count, increment_upload_count,
+    track_file_deletion, track_file_download, MAX_FILES_PER_IP
+)
 
 # Get absolute path for uploads folder
 UPLOAD_FOLDER = Path('uploads').resolve()
-UPLOAD_TRACKER_FILE = Path('upload_tracker.json')
-MAX_FILES_PER_IP = 50
 
 web_bp = Blueprint('web', __name__)
-
-
-def load_upload_tracker():
-    """Load the upload tracker from file."""
-    if UPLOAD_TRACKER_FILE.exists():
-        try:
-            with open(UPLOAD_TRACKER_FILE, 'r') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            return {}
-    return {}
-
-
-def save_upload_tracker(tracker):
-    """Save the upload tracker to file."""
-    try:
-        with open(UPLOAD_TRACKER_FILE, 'w') as f:
-            json.dump(tracker, f, indent=2)
-    except IOError:
-        pass
-
-
-def get_client_ip():
-    """Get the client's IP address, considering proxy headers."""
-    if request.headers.get('X-Forwarded-For'):
-        # Get the first IP in the chain (client IP)
-        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
-    elif request.headers.get('X-Real-IP'):
-        return request.headers.get('X-Real-IP')
-    return request.remote_addr
-
-
-def get_upload_count(ip):
-    """Get the number of files uploaded by this IP."""
-    tracker = load_upload_tracker()
-    return tracker.get(ip, {}).get('count', 0)
-
-
-def increment_upload_count(ip):
-    """Increment the upload count for this IP."""
-    tracker = load_upload_tracker()
-    if ip not in tracker:
-        tracker[ip] = {'count': 0, 'first_upload': datetime.now().isoformat()}
-    tracker[ip]['count'] += 1
-    tracker[ip]['last_upload'] = datetime.now().isoformat()
-    save_upload_tracker(tracker)
 
 
 @web_bp.route('/')
@@ -245,8 +200,8 @@ def upload_file():
     # Save the new file
     file.save(file_path)
 
-    # Increment upload count for this IP
-    increment_upload_count(client_ip)
+    # Increment upload count for this IP and track the file with size
+    increment_upload_count(client_ip, file.filename, file_size)
 
     # Get updated count
     new_count = get_upload_count(client_ip)
@@ -307,6 +262,14 @@ def download_file(filename):
     # Ensure the uploads folder exists
     UPLOAD_FOLDER.mkdir(exist_ok=True)
 
+    # Get file size for tracking
+    file_path = UPLOAD_FOLDER / filename
+    file_size = file_path.stat().st_size if file_path.exists() else 0
+
+    # Track the download with size
+    client_ip = get_client_ip()
+    track_file_download(client_ip, filename, file_size)
+
     # send_from_directory needs a string path
     return send_from_directory(str(UPLOAD_FOLDER), filename, as_attachment=True)
 
@@ -320,8 +283,15 @@ def delete_file(filename):
         if not file_path.exists():
             return jsonify({'error': 'File not found'}), 404
 
+        # Get file size before deleting
+        file_size = file_path.stat().st_size
+
         # Delete the file
         file_path.unlink()
+
+        # Track the deletion with size
+        client_ip = get_client_ip()
+        track_file_deletion(client_ip, filename, file_size)
 
         return jsonify({
             'success': True,
