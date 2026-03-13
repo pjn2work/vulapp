@@ -142,12 +142,6 @@ def logout():
 
 
 # File Upload and Download Routes
-@web_bp.route('/web/upload')
-def upload_page():
-    """Render the file upload page."""
-    return render_template('upload.html')
-
-
 @web_bp.route('/web/upload-file', methods=['POST'])
 def upload_file():
     """Handle file upload with size limit and name collision handling."""

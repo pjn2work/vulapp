@@ -27,6 +27,121 @@
             padding: 40px;
         }
 
+        .upload-section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .upload-title {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .drop-zone {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .drop-zone.dragover {
+            border-color: #667eea;
+            background: #e8eaf6;
+            transform: scale(1.02);
+        }
+
+        .drop-zone.uploading {
+            border-color: #ffa726;
+            background: #fff3e0;
+        }
+
+        .drop-zone.success {
+            border-color: #66bb6a;
+            background: #e8f5e9;
+        }
+
+        .drop-zone.error {
+            border-color: #ef5350;
+            background: #ffebee;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .drop-zone.uploading .upload-icon {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .drop-text {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .drop-subtext {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            font-size: 14px;
+        }
+
+        .upload-message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #66bb6a;
+        }
+
+        .upload-message.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        .progress-container {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -275,10 +390,25 @@
 </head>
 <body>
     <div class="container">
+        <div class="upload-section">
+            <h1>📤 File Upload</h1>
+            <div class="drop-zone" id="dropZone">
+                <div class="upload-icon">☁️</div>
+                <div class="drop-text">Drag & Drop your file here</div>
+                <div class="drop-subtext">or click to browse (Max 100MB)</div>
+            </div>
+            <input type="file" id="fileInput" class="file-input">
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            <div class="upload-message" id="uploadMessage"></div>
+        </div>
+
         <div class="header">
             <h1>📁 File Browser</h1>
             <div class="nav-links">
-                <a href="/web/upload">⬆️ Upload Files</a>
                 <a href="/">🏠 Home</a>
             </div>
         </div>
@@ -331,6 +461,128 @@
     <script>
         let allFiles = [];
 
+        // Upload functionality
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadMessage = document.getElementById('uploadMessage');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+
+        // Click to browse
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        function handleFileUpload(file) {
+            // Reset states
+            uploadMessage.style.display = 'none';
+            dropZone.classList.remove('success', 'error');
+
+            // Check file size
+            const maxSize = 100 * 1024 * 1024; // 100MB
+            if (file.size > maxSize) {
+                showUploadMessage(`File size (${formatBytes(file.size)}) exceeds 100MB limit`, 'error');
+                dropZone.classList.add('error');
+                return;
+            }
+
+            uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show progress
+            dropZone.classList.add('uploading');
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+
+            fetch('/web/upload-file', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                dropZone.classList.remove('uploading');
+                progressFill.style.width = '100%';
+
+                setTimeout(() => {
+                    if (data.success) {
+                        dropZone.classList.add('success');
+                        showUploadMessage(`✅ ${data.message}`, 'success');
+
+                        // Reload files and quota
+                        loadFiles();
+                        loadQuota();
+                    } else {
+                        dropZone.classList.add('error');
+                        showUploadMessage(`❌ ${data.error || 'Upload failed'}`, 'error');
+                    }
+
+                    // Reset after 3 seconds
+                    setTimeout(() => {
+                        dropZone.classList.remove('success', 'error');
+                        progressContainer.style.display = 'none';
+                        progressFill.style.width = '0%';
+                        fileInput.value = '';
+                    }, 1000);
+                }, 500);
+            })
+            .catch(error => {
+                dropZone.classList.remove('uploading');
+                dropZone.classList.add('error');
+                progressContainer.style.display = 'none';
+                showUploadMessage(`❌ Upload failed: ${error.message}`, 'error');
+
+                setTimeout(() => {
+                    dropZone.classList.remove('error');
+                }, 3000);
+            });
+
+            // Simulate progress animation
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                if (progress <= 95) {
+                    progressFill.style.width = progress + '%';
+                } else {
+                    clearInterval(interval);
+                }
+            }, 50);
+        }
+
+        function showUploadMessage(text, type) {
+            uploadMessage.textContent = text;
+            uploadMessage.className = `upload-message ${type}`;
+            uploadMessage.style.display = 'block';
+        }
+
         function formatBytes(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -366,6 +618,7 @@
                 'txt': '📃',
                 'json': '📋',
                 'xml': '📋',
+                'yaml': '📋',
                 'html': '🌐',
                 'css': '🎨',
                 'js': '⚙️',
