@@ -1,4 +1,4 @@
-# VulWeb - Pentest Target Lab
+# VulApp - Pentest Target Lab
 
 A vulnerable Flask application designed for penetration testing practice.
 
@@ -6,9 +6,9 @@ A vulnerable Flask application designed for penetration testing practice.
 
 To perform your pentests, use the following known values:
 
-*   **Username:** `admin`
-*   **Password:** `easypassword`
-*   **TOTP Seed:** `XVQ2UIGO75XRUKJO`
+*   **Basic-Auth Username:** `admin`
+*   **Basic-Auth Password:** `easypassword`
+*   **2FA TOTP Seed:** `XVQ2UIGO75XRUKJO`
 *   **Secret Header:** `secret-header: my-secret-header`
 *   **Secret Cookie:** `secret-cookie: my-secret-cookie`
 *   **Bearer Token Header:** `token: Bearer Sf54F-/f#${wf}!*aR.y%`
@@ -64,7 +64,7 @@ Requests to `/web/welcome-` or `/api/v1/` endpoints are printed to stdout.
 
 ### Local Development
 1.  **Install Dependencies:** `pip install -r requirements.txt`
-2.  **Run:** `python app.py` (Starts on `http://0.0.0.0:5000`)
+2.  **Run:** `python run.py` (Starts on `http://0.0.0.0:5000`)
 
 ### Docker Deployment
 1.  **Build:** `docker build -t vulapp .`
