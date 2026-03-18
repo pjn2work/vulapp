@@ -15,6 +15,14 @@ This document provides a detailed overview of all endpoints available in the app
 | `/web/welcome-header` | `GET` | **Header**: `secret-header: my-secret-header` | Page accessible only with a specific secret header. | `200 OK`, `501 Not Implemented` (Fail) |
 | `/web/welcome-cookie` | `GET` | None (Optional cookie check commented out) | Page that demonstrates CORS/XHR. | `200 OK` |
 | `/web/ping` | `GET` | **Query Param**: `host` | Network utility. **Vulnerable to Command Injection** via `host`. | `200 OK` |
+| `/web/users` | `GET` | **Query Param**: `search` | User search page. **Vulnerable to SQL Injection** via `search` parameter. | `200 OK` |
+| `/web/guestbook` | `GET` | **Query Param**: `name` | Visitor guestbook. **Vulnerable to Reflected XSS** via `name` parameter. | `200 OK` |
+| `/web/files` | `GET` | None | Modern file browser with upload/download/delete functionality. | `200 OK` |
+| `/web/upload-file` | `POST` | **Form Data**: `file` (multipart) | Upload file with 100MB size limit and 50 files/IP rate limiting. | `200 OK`, `400 Bad Request`, `413 Payload Too Large`, `429 Too Many Requests` |
+| `/web/list-files` | `GET` | None | Returns JSON list of all uploaded files with metadata. | `200 OK` |
+| `/web/upload-quota` | `GET` | None | Returns current upload quota for client IP. | `200 OK` |
+| `/web/download/<filename>` | `GET` | **Path Variable**: `filename` | Download a file from uploads folder. | `200 OK`, `404 Not Found` |
+| `/web/delete/<filename>` | `DELETE` | **Path Variable**: `filename` | Delete a file from uploads folder. | `200 OK`, `404 Not Found`, `500 Error` |
 | `/web/logout` | `GET` | None | Clears the session and redirects to index. | `302 Redirect` |
 
 ## API Endpoints (`/api`)
@@ -30,6 +38,26 @@ This document provides a detailed overview of all endpoints available in the app
 | `/api/v1/get-token` | `POST` | **JSON**: `{"auth": {"username": "admin", "password": "easypassword"}}` | Authenticates and returns a Bearer token. | `200 OK`, `400 Unauthorized` | None |
 | `/api/v1/get-token-form` | `POST` | **Form Data**: `username=admin&password=easypassword` | Authenticates via form data and returns a Bearer token. | `200 OK`, `400 Unauthorized` | None |
 | `/api/v1/is-valid-token` | `GET`, `POST` | **Header**: `token: Bearer Sf54F-/f#${wf}!*aR.y%` | Validates the provided Bearer token. | `200 OK`, `501 Invalid Token` | None |
+
+## File Upload System
+
+The file upload system tracks all uploads, downloads, and deletions per IP address in `upload_tracker.json`:
+
+- **Rate Limiting:** Maximum 50 files per IP address
+- **File Size Limit:** 100MB per file
+- **Collision Handling:** Existing files are renamed with timestamp (e.g., `file_20251231_151050.ext`)
+- **Tracking:** All operations (upload/download/delete) are logged with filename, size, and timestamp
+- **Storage:** Files stored in `uploads/` directory
+
+### Upload Quota Response (`/web/upload-quota`)
+```json
+{
+  "uploads_used": 5,
+  "uploads_limit": 50,
+  "uploads_remaining": 45,
+  "percentage": 10.0
+}
+```
 
 ## API Response Examples
 

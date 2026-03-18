@@ -34,8 +34,9 @@ These pages require specific authentication or headers to access. All `/web/welc
 | `/web/welcome-cookie` | **Cookie**: `secret-cookie=my-secret-cookie` |
 
 ### Vulnerable Tools
-*   **`/api/v1/users/<user_id>`**: User search API. Vulnerable to **SQL Injection** via the `user_id` path parameter.
 *   **`/web/ping`**: Network utility. Vulnerable to **Command Injection** via the `host` query parameter.
+*   **`/web/users`**: User search page. Vulnerable to **SQL Injection** via the `search` query parameter.
+*   **`/web/guestbook`**: Visitor guestbook. Vulnerable to **Reflected XSS** via the `name` query parameter.
 
 ### API Endpoints
 *   **`/swagger-ui`**: Interactive Swagger documentation for the API.

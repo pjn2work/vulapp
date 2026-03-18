@@ -1,12 +1,13 @@
 """Web routes for the vulnerable application."""
 import os
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 import subprocess
 import pyotp
 from flask import Blueprint, request, render_template, redirect, url_for, session, make_response, jsonify, send_from_directory
 from vulapp.auth import requires_basic_auth, requires_session, requires_2fa_session, requires_secret_header, requires_secret_cookie
-from vulapp.config import USERNAME, PASSWORD, TOTP_SEED, SECRET_HEADER_NAME, SECRET_HEADER_VALUE, SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE
+from vulapp.config import USERNAME, PASSWORD, TOTP_SEED, SECRET_HEADER_NAME, SECRET_HEADER_VALUE, SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE, DATABASE
 from vulapp.tracker import (
     get_client_ip, get_upload_count, increment_upload_count,
     track_file_deletion, track_file_download, MAX_FILES_PER_IP
@@ -133,6 +134,34 @@ def ping():
         except subprocess.CalledProcessError as e:
             output = e.output
     return render_template('ping.html', output=output, host=host)
+
+
+# 5. User Search (SQL Injection)
+@web_bp.route('/web/users')
+def users():
+    search = request.args.get('search', '')
+    results = []
+    query = ""
+
+    if search:
+        # VULNERABLE: SQL Injection
+        query = f"SELECT username, bio FROM users WHERE username LIKE '%{search}%'"
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            try:
+                results = cursor.execute(query).fetchall()
+            except Exception as e:
+                # Still render the page with the error visible in query
+                pass
+
+    return render_template('users.html', results=results, query=query)
+
+
+# 6. Guestbook (Reflected XSS)
+@web_bp.route('/web/guestbook')
+def guestbook():
+    name = request.args.get('name', '')
+    return render_template('guestbook.html', name=name)
 
 
 @web_bp.route('/web/logout')

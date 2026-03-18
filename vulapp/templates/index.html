@@ -1,68 +1,421 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Pentest Target Home</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulApp - Pentest Training Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-bottom: 1px solid #333;
+            padding: 2rem 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: #9ca3af;
+            margin-bottom: 2rem;
+        }
+
+        .credentials-section {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .credentials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .credential-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .credential-label {
+            font-weight: 600;
+            color: #a78bfa;
+            min-width: 100px;
+        }
+
+        .credential-value {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            color: #10b981;
+            border: 1px solid #374151;
+            font-size: 0.875rem;
+        }
+
+        .main-content {
+            padding: 3rem 0;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #2d2d2d;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #a78bfa, #ec4899);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: #a78bfa;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(167, 139, 250, 0.15);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-bottom: 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .link-list {
+            list-style: none;
+        }
+
+        .link-list li {
+            margin-bottom: 0.75rem;
+        }
+
+        .link-list a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #a78bfa;
+            text-decoration: none;
+            font-size: 0.9375rem;
+            transition: color 0.2s ease;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .link-list a:hover {
+            color: #c4b5fd;
+            background: rgba(167, 139, 250, 0.1);
+        }
+
+        .link-icon {
+            font-size: 1.125rem;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .divider {
+            height: 1px;
+            background: #2d2d2d;
+            margin: 3rem 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(167, 139, 250, 0.3);
+        }
+
+        .btn-secondary {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+        }
+
+        .btn-secondary:hover {
+            border-color: #a78bfa;
+            background: #2d2d2d;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .credentials-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-
 <body>
-    <h1>Pentest Lab - Choose Your Entry Point</h1>
+    <div class="header">
+        <div class="container">
+            <h1>VulApp Pentest Lab</h1>
+            <p class="subtitle">Intentionally vulnerable application for security testing and training</p>
 
-    <p><strong>Basic-Auth:</strong> <code>admin / easypassword</code></p>
-    <p><strong>OTP Seed:</strong> <code>XVQ2UIGO75XRUKJO</code></p>
-    <p><strong>Header:</strong> <code>secret-header: my-secret-header</code></p>
-    <p><strong>Cookie:</strong> <code>secret-cookie: my-secret-cookie</code></p>
+            <div class="credentials-section">
+                <div class="credentials-grid">
+                    <div class="credential-item">
+                        <span class="credential-label">Basic Auth:</span>
+                        <code class="credential-value">admin / easypassword</code>
+                    </div>
+                    <div class="credential-item">
+                        <span class="credential-label">OTP Seed:</span>
+                        <code class="credential-value">XVQ2UIGO75XRUKJO</code>
+                    </div>
+                    <div class="credential-item">
+                        <span class="credential-label">Secret Header:</span>
+                        <code class="credential-value">secret-header: my-secret-header</code>
+                    </div>
+                    <div class="credential-item">
+                        <span class="credential-label">Secret Cookie:</span>
+                        <code class="credential-value">secret-cookie=my-secret-cookie</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <h2># WEB:</h2>
+    <div class="main-content">
+        <div class="container">
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">🌐</span>
+                    <h2>Web Interfaces</h2>
+                </div>
 
-    <h3>Web Authentication Forms:</h3>
-    <ul>
-        <li><a href="/web/login">1. Login (User + Pass) - (SQLi Bypass)</a></li>
-        <li><a href="/web/login-2fa">2. Login + 2FA (User + Pass + OTP)</a></li>
-        <li><a href="/web/logout">Logout</a></li>
-    </ul>
+                <h3>Authentication Forms</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title">Simple Login</div>
+                        <div class="card-description">Username + Password authentication</div>
+                        <span class="badge badge-danger">SQL Injection</span>
+                        <div style="margin-top: 1rem;">
+                            <a href="/web/login" class="btn">Access Login</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">2FA Login</div>
+                        <div class="card-description">Username + Password + TOTP verification</div>
+                        <span class="badge badge-warning">Multi-factor Auth</span>
+                        <div style="margin-top: 1rem;">
+                            <a href="/web/login-2fa" class="btn">Access 2FA Login</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Logout</div>
+                        <div class="card-description">Clear session and logout</div>
+                        <span class="badge badge-info">Session Management</span>
+                        <div style="margin-top: 1rem;">
+                            <a href="/web/logout" class="btn btn-secondary">Logout</a>
+                        </div>
+                    </div>
+                </div>
 
-    <h3>Required objects pages:</h3>
-    <ul>
-        <li><a href="/web/welcome-basic-auth">Requires Basic Auth</a></li>
-        <li><a href="/web/welcome-simple">Requires Session var - 'logged_in': true</a></li>
-        <li><a href="/web/welcome-2fa">Requires Session var - '2fa_logged_in': true</a></li>
-        <li><a href="/web/welcome-header">Requires Header - 'secret-header': 'my-secret-header'</a></li>
-        <li><a href="/web/welcome-cookie">Requires Cookie - 'secret-cookie'='my-secret-cookie'</a></li>
-    </ul>
+                <h3 style="margin-top: 2rem;">Protected Pages</h3>
+                <ul class="link-list">
+                    <li><a href="/web/welcome-basic-auth"><span class="link-icon">🔐</span> Basic Auth Required</a></li>
+                    <li><a href="/web/welcome-simple"><span class="link-icon">🔑</span> Session Required (logged_in: true)</a></li>
+                    <li><a href="/web/welcome-2fa"><span class="link-icon">🛡️</span> 2FA Session Required (2fa_logged_in: true)</a></li>
+                    <li><a href="/web/welcome-header"><span class="link-icon">📋</span> Secret Header Required</a></li>
+                    <li><a href="/web/welcome-cookie"><span class="link-icon">🍪</span> Secret Cookie Required</a></li>
+                </ul>
 
-    <h3>Original Vulnerable Tools:</h3>
-    <ul>
-        <li><a href="/web/ping">Ping Tool (Command Injection)</a></li>
-        <li><a href="/api/v1/users/1">User Search API (SQL Injection)</a></li>
-    </ul>
+                <h3 style="margin-top: 2rem;">Vulnerable Tools</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title">Ping Tool</div>
+                        <div class="card-description">Network connectivity diagnostic tool</div>
+                        <span class="badge badge-danger">Command Injection</span>
+                        <div style="margin-top: 1rem;">
+                            <a href="/web/ping" class="btn">Open Ping Tool</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">User Search</div>
+                        <div class="card-description">Query users from the database</div>
+                        <span class="badge badge-danger">SQL Injection</span>
+                        <div style="margin-top: 1rem;">
+                            <a href="/web/users" class="btn">Open User Search</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Guestbook</div>
+                        <div class="card-description">Sign our visitor guestbook</div>
+                        <span class="badge badge-danger">Reflected XSS</span>
+                        <div style="margin-top: 1rem;">
+                            <a href="/web/guestbook" class="btn">Open Guestbook</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <h3>File Management:</h3>
-    <ul>
-        <li><a href="/web/files">📁 File Manager (Browse, Upload & Download)</a></li>
-    </ul>
+            <div class="divider"></div>
 
-    <hr>
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">⚙️</span>
+                    <h2>API Documentation</h2>
+                </div>
 
-    <h2># API:</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title">Swagger UI</div>
+                        <div class="card-description">Interactive API documentation and testing interface</div>
+                        <div style="margin-top: 1rem;">
+                            <a href="/swagger-ui" class="btn">Open Swagger UI</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">OpenAPI JSON</div>
+                        <div class="card-description">Machine-readable API specification</div>
+                        <div style="margin-top: 1rem;">
+                            <a href="/openapi.json" class="btn btn-secondary">View Spec</a>
+                        </div>
+                    </div>
+                </div>
 
-    <h3>OpenAPI</h3>
-    <ul>
-        <li><a href="/swagger-ui"><b>Interactive API Documentation (Swagger UI)</b></a></li>
-        <li><a href="/openapi.json"><b>OpenAPI JSON file</b></a></li>
-    </ul>
-        
-    <h3>Tools</h3>
-    <ul>
-        <li><a href="/api/tools/echo?p1=test">All HTTP Methods. Echo JSON with: headers, query paramenters and body</a></li>
-        <li><a href="/api/tools/otp?seed_b32=XVQ2UIGO75XRUKJO">GET|POST /api/v1/otp?seed_b32=XVQ2UIGO75XRUKJO or /api/v1/otp?seed_hex=bd61aa20ceff6f1a292e --> returns JSON {otp_code, seed_b32, seed_hex, time_remaining}</a></li>
-    </ul>
-        
-    <h3>Testing</h3>
-    <ul>
-        <li><a href="/api/v1/header-cookie">GET /api/v1/header-cookie (Requires secret header + cookie)</a></li>
-        <li><a href="/api/v1/header-cookie-auth">GET /api/v1/header-cookie-auth (Requires Basic-Auth + secret header + cookie)</a></li>
-    </ul>
+                <h3 style="margin-top: 2rem;">API Tools</h3>
+                <ul class="link-list">
+                    <li><a href="/api/tools/echo?p1=test"><span class="link-icon">🔄</span> Echo Service - Reflects all request data</a></li>
+                    <li><a href="/api/tools/otp?seed_b32=XVQ2UIGO75XRUKJO"><span class="link-icon">⏱️</span> OTP Generator - Generate TOTP codes</a></li>
+                </ul>
+
+                <h3 style="margin-top: 2rem;">Testing Endpoints</h3>
+                <ul class="link-list">
+                    <li><a href="/api/v1/header-cookie"><span class="link-icon">🔍</span> Header + Cookie Validation</a></li>
+                    <li><a href="/api/v1/header-cookie-auth"><span class="link-icon">🔒</span> Basic Auth + Header + Cookie Validation</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </body>
-
 </html>

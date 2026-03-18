@@ -1,17 +1,237 @@
 <!DOCTYPE html>
-<html>
-<head><title>Full 2FA Login</title></head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA Login - VulApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #0a0a0a;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+        }
+
+        input::placeholder {
+            color: #6b7280;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(167, 139, 250, 0.3);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        .otp-section {
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .otp-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #c4b5fd;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .otp-seed {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            padding: 0.75rem;
+            border-radius: 4px;
+            color: #10b981;
+            border: 1px solid #374151;
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 0.1em;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+            color: #fca5a5;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link a {
+            color: #a78bfa;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s ease;
+        }
+
+        .back-link a:hover {
+            color: #c4b5fd;
+        }
+
+        .divider {
+            height: 1px;
+            background: #2d2d2d;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
 <body>
-    <h1>Full 2FA Login</h1>
-    <form method="POST">
-        <label>Username:</label> <input type="text" name="username"><br>
-        <label>Password:</label> <input type="password" name="password"><br>
-        <label>TOTP Code:</label> <input type="text" name="otp" required><br>
-        <button type="submit">Verify & Login</button>
-    </form>
-    <p>Seed: <b>XVQ2UIGO75XRUKJO</b></p>
-    <div>
-        <strong>{{ error_message }}</strong>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Two-Factor Login</h1>
+                <p class="subtitle">Enhanced Security with TOTP</p>
+                <span class="badge">Multi-Factor Authentication</span>
+            </div>
+
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter username" autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password">
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="form-group">
+                    <label for="otp">TOTP Code</label>
+                    <input type="text" id="otp" name="otp" placeholder="Enter 6-digit code" required maxlength="6" pattern="[0-9]{6}">
+                </div>
+
+                <button type="submit">Verify & Sign In</button>
+            </form>
+
+            <div class="otp-section">
+                <span class="otp-label">TOTP Seed (Base32)</span>
+                <div class="otp-seed">XVQ2UIGO75XRUKJO</div>
+            </div>
+
+            {% if error_message %}
+            <div class="error-message">
+                {{ error_message }}
+            </div>
+            {% endif %}
+
+            <div class="back-link">
+                <a href="/">← Back to Home</a>
+            </div>
+        </div>
     </div>
 </body>
 </html>
