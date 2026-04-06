@@ -5,9 +5,10 @@ from datetime import datetime
 from pathlib import Path
 import subprocess
 import pyotp
-import json
-from flask import Blueprint, request, render_template, redirect, url_for, session, make_response, jsonify, send_from_directory
+import yaml
+from flask import Blueprint, request, render_template, redirect, url_for, session, make_response, jsonify, send_from_directory, Response
 from graphene import ObjectType, String, Schema, List, Field, Int
+from graphql import get_introspection_query
 from vulapp.auth import requires_basic_auth, requires_session, requires_2fa_session, requires_secret_header, requires_secret_cookie
 from vulapp.config import USERNAME, PASSWORD, TOTP_SEED, SECRET_HEADER_NAME, SECRET_HEADER_VALUE, SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE, DATABASE
 from vulapp.tracker import (
@@ -247,6 +248,40 @@ def graphql_interface():
                          query=query_string,
                          result=result.data if result and not error else None,
                          error=error)
+
+
+# 5c. GraphQL Schema Export (YAML/SDL)
+@web_bp.route('/web/graphql/yaml')
+def graphql_schema_yaml():
+    """Export GraphQL schema in YAML format using introspection."""
+    try:
+        # Get introspection query result
+        introspection_query = get_introspection_query()
+        result = graphql_schema.execute(introspection_query)
+
+        if result.errors:
+            return Response(
+                f"# Error generating schema\n# {result.errors[0]}",
+                mimetype='text/yaml',
+                status=500
+            )
+
+        # Convert introspection result to YAML
+        schema_yaml = yaml.dump(result.data, default_flow_style=False, sort_keys=False)
+
+        return Response(
+            schema_yaml,
+            mimetype='text/yaml',
+            headers={
+                'Content-Disposition': 'inline; filename="graphql_schema.yaml"'
+            }
+        )
+    except Exception as e:
+        return Response(
+            f"# Error: {str(e)}",
+            mimetype='text/yaml',
+            status=500
+        )
 
 
 # 6. Guestbook (Reflected XSS)

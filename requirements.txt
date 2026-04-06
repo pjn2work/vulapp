@@ -5,3 +5,4 @@ flask-smorest
 marshmallow
 pyyaml
 graphene
+graphql-core
