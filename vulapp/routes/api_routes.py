@@ -3,6 +3,7 @@ import sqlite3
 from flask import request
 from flask.views import MethodView
 from flask_smorest import Blueprint
+from graphql import get_introspection_query
 from vulapp.auth import requires_basic_auth, requires_secret_header, requires_secret_cookie, requires_auth_token
 from vulapp.config import USERNAME, PASSWORD, TOKEN, PREFIX, DATABASE
 from vulapp.schemas import (
@@ -145,3 +146,75 @@ def get_token_form(args):
 @requires_auth_token
 def good_token():
     return {"message": "You've go the correct token!"}, 200
+
+
+# GraphQL API Endpoint (JSON)
+@api_blp.route('/v1/graphql', methods=['POST'])
+def graphql_api():
+    """
+    GraphQL API endpoint - returns JSON responses.
+    VULNERABLE: SQL injection, no query depth limiting, introspection enabled.
+
+    Example POST body:
+    {
+        "query": "{ users { id username email } }"
+    }
+    """
+    # Import here to avoid circular dependency
+    from vulapp.routes.web_routes import graphql_schema
+
+    try:
+        # Accept JSON or form data
+        if request.is_json:
+            data = request.get_json()
+            query_string = data.get('query', '')
+        else:
+            query_string = request.form.get('query', '') or request.args.get('query', '')
+
+        if not query_string:
+            return {
+                "errors": [{
+                    "message": "No query provided. Send JSON with 'query' field or use query parameter."
+                }]
+            }, 400
+
+        # Execute GraphQL query
+        result = graphql_schema.execute(query_string)
+
+        # Build response
+        response = {}
+        if result.data:
+            response['data'] = result.data
+        if result.errors:
+            response['errors'] = [{"message": str(e)} for e in result.errors]
+
+        return response, 200
+
+    except Exception as e:
+        return {
+            "errors": [{
+                "message": f"GraphQL execution error: {str(e)}"
+            }]
+        }, 500
+
+
+# GraphQL Schema Export (JSON introspection)
+@api_blp.route('/v1/graphql/schema', methods=['GET'])
+def graphql_schema_api():
+    """Export GraphQL schema via introspection query (returns JSON)."""
+    from vulapp.routes.web_routes import graphql_schema
+
+    try:
+        introspection_query = get_introspection_query()
+        result = graphql_schema.execute(introspection_query)
+
+        if result.errors:
+            return {
+                "error": "Failed to generate schema",
+                "details": str(result.errors[0])
+            }, 500
+
+        return result.data, 200
+
+    except Exception as e:
+        return {"error": str(e)}, 500
