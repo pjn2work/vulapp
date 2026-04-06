@@ -17,6 +17,7 @@ This document provides a detailed overview of all endpoints available in the app
 | `/web/ping` | `GET` | **Query Param**: `host` | Network utility. **Vulnerable to Command Injection** via `host`. | `200 OK` |
 | `/web/users` | `GET` | **Query Param**: `search` | User search page. **Vulnerable to SQL Injection** via `search` parameter. | `200 OK` |
 | `/web/guestbook` | `GET` | **Query Param**: `name` | Visitor guestbook. **Vulnerable to Reflected XSS** via `name` parameter. | `200 OK` |
+| `/web/graphql` | `GET`, `POST` | **Query/Form Param**: `query` | GraphQL query interface. **Vulnerable to GraphQL Injection**, SQL Injection via GraphQL parameters, no depth limiting, introspection enabled, sensitive field exposure. | `200 OK` |
 | `/web/files` | `GET` | None | Modern file browser with upload/download/delete functionality. | `200 OK` |
 | `/web/upload-file` | `POST` | **Form Data**: `file` (multipart) | Upload file with 100MB size limit and 50 files/IP rate limiting. | `200 OK`, `400 Bad Request`, `413 Payload Too Large`, `429 Too Many Requests` |
 | `/web/list-files` | `GET` | None | Returns JSON list of all uploaded files with metadata. | `200 OK` |

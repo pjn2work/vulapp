@@ -5,7 +5,9 @@ from datetime import datetime
 from pathlib import Path
 import subprocess
 import pyotp
+import json
 from flask import Blueprint, request, render_template, redirect, url_for, session, make_response, jsonify, send_from_directory
+from graphene import ObjectType, String, Schema, List, Field, Int
 from vulapp.auth import requires_basic_auth, requires_session, requires_2fa_session, requires_secret_header, requires_secret_cookie
 from vulapp.config import USERNAME, PASSWORD, TOTP_SEED, SECRET_HEADER_NAME, SECRET_HEADER_VALUE, SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE, DATABASE
 from vulapp.tracker import (
@@ -155,6 +157,96 @@ def users():
                 pass
 
     return render_template('users.html', results=results, query=query)
+
+
+# GraphQL Schema (Intentionally Vulnerable)
+class UserType(ObjectType):
+    """GraphQL User type."""
+    id = Int()
+    username = String()
+    email = String()
+    bio = String()
+    password = String()  # VULNERABLE: Exposing password field
+
+
+class Query(ObjectType):
+    """GraphQL Query type."""
+    users = List(UserType, search=String())
+    user = Field(UserType, id=Int(), username=String())
+
+    def resolve_users(self, info, search=None):
+        """Resolve users query - fetches from database."""
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            if search:
+                # VULNERABLE: Direct string interpolation in SQL (via GraphQL)
+                query = f"SELECT rowid, username, username || '@vulapp.local', bio, 'hidden' FROM users WHERE username LIKE '%{search}%'"
+            else:
+                query = "SELECT rowid, username, username || '@vulapp.local', bio, 'hidden' FROM users"
+
+            try:
+                results = cursor.execute(query).fetchall()
+                return [
+                    UserType(id=r[0], username=r[1], email=r[2], bio=r[3], password=r[4])
+                    for r in results
+                ]
+            except Exception:
+                return []
+
+    def resolve_user(self, info, id=None, username=None):
+        """Resolve single user query."""
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            if id:
+                query = f"SELECT rowid, username, username || '@vulapp.local', bio, 'hidden' FROM users WHERE rowid = {id}"
+            elif username:
+                # VULNERABLE: Direct string interpolation
+                query = f"SELECT rowid, username, username || '@vulapp.local', bio, 'hidden' FROM users WHERE username = '{username}'"
+            else:
+                return None
+
+            try:
+                result = cursor.execute(query).fetchone()
+                if result:
+                    return UserType(id=result[0], username=result[1], email=result[2], bio=result[3], password=result[4])
+            except Exception:
+                pass
+        return None
+
+
+# Create GraphQL schema
+graphql_schema = Schema(query=Query)
+
+
+# 5b. GraphQL Query Interface (Multiple Vulnerabilities)
+@web_bp.route('/web/graphql', methods=['GET', 'POST'])
+def graphql_interface():
+    """GraphQL query interface - VULNERABLE to injection, introspection, no depth limiting."""
+    query_string = ""
+    result = None
+    error = None
+
+    if request.method == 'POST':
+        query_string = request.form.get('query', '')
+    else:
+        query_string = request.args.get('query', '')
+
+    if query_string:
+        try:
+            # VULNERABLE: No query validation, depth limiting, or complexity analysis
+            # Allows introspection queries, deeply nested queries, batch attacks
+            result = graphql_schema.execute(query_string)
+
+            if result.errors:
+                error = str(result.errors[0])
+
+        except Exception as e:
+            error = str(e)
+
+    return render_template('graphql.html',
+                         query=query_string,
+                         result=result.data if result and not error else None,
+                         error=error)
 
 
 # 6. Guestbook (Reflected XSS)
