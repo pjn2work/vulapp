@@ -150,6 +150,7 @@ def good_token():
 
 # GraphQL API Endpoint (JSON)
 @api_blp.route('/v1/graphql', methods=['POST'])
+@requires_secret_header
 def graphql_api():
     """
     GraphQL API endpoint - returns JSON responses.
