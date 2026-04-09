@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+          color: black;
+          font: 14pt Georgia;
+        }
+        select, textarea {
+          color: rgb(3, 2, 53);
+          font: 12pt monospace;
+        }        
+    </style>
+</head>
+
+<body>
+
+    <table>
+        <tr>
+            <td>
+                <div style="width: 320px;">
+                    <label for="rangeTotalTime">Time total</label>
+                    <input type="range" id="rangeTotalTime" step="0.05" min="0.0" max="20.0" value="2.1">
+                    <span id="rangeTotalTimeValue">2.1</span>
+                    
+                    <br>
+
+                    <label for="rangeIncTime">Time inc</label>
+                    <input type="range" id="rangeIncTime" step="0.005" min="0.005" max="0.1" value="0.010">
+                    <span id="rangeIncTimeValue">0.01</span>
+                    
+                    <br>
+
+                    <label for="rangeTotalSamples">Samples total</label>
+                    <input type="range" id="rangeTotalSamples" step="10" min="10" max="1000" value="300">
+                    <span id="rangeTotalSamplesValue">300</span>
+
+                    <br>
+
+                    <label for="showLines">Draw lines</label>
+                    <input type="checkbox" id="showLines" oninput="draw();" checked>
+                    
+
+
+                    <hr>
+
+
+
+                    <button type="button" id="buttonAddLine" style="width: 100%;">Add line</button>
+
+                    <br>
+
+                    <button type="button" id="buttonRemoveLine" style="width: 100%;">Remove line</button>
+
+                    <br>
+
+                    <select id="listLines" size="8" style="width: 100%;"></select>
+
+
+
+                    <hr>
+
+
+
+                    <label for="rangeLine_Color">Line color</label>
+                    <select id="rangeLine_Color">
+                        <option value="green">green</option>
+                        <option value="blue">blue</option>
+                        <option value="purple">purple</option>
+                        <option value="red">red</option>
+                        <option value="yellow">yellow</option>
+                        <option value="cyan">cyan</option>
+                        <option value="gray">gray</option>
+                        <option value="white">white</option>
+                        <option value="---">---</option>
+                    </select>
+
+                    <br>
+
+                    <label for="rangeLine_Len">Line lenght</label>
+                    <input type="range" id="rangeLine_Len" step="1" min="0" max="400" value="200">
+                    <span id="rangeLine_LenValue">200</span>
+
+                    <br>
+
+                    <label for="rangeLine_A0">Starting angle</label>
+                    <input type="range" id="rangeLine_A0" step="1" min="0" max="360" value="0">
+                    <span id="rangeLine_A0Value">0</span>
+                    
+                    <br>
+
+                    <label for="rangeLine_W">Angular speed</label>
+                    <input type="range" id="rangeLine_W" step="0.05" min="-5.0" max="5.0" value="1">
+                    <span id="rangeLine_WValue">1</span>
+
+
+
+                    <hr>
+
+
+
+                    <button type="button" id="buttonBulkSet" style="width: 100%;" onclick="bulkSet();">^^ Bulk set lines ^^</button>
+                    <br>
+                    <textarea id="bulkSet" spellcheck="false" rows="8" cols="33">green, 160, 0, 1
+blue, 47, 0, -3
+purple, 25, 180, -3</textarea>
+                    <button type="button" id="buttonBulkGet" style="width: 100%;" onclick="bulkGet();">vv Bulk get lines vv</button>
+
+                </div>
+            </td>
+
+            <td>
+                <canvas id="board" width="1200" height="1000">
+                    Your browser doesn't support the canvas element.
+                </canvas>
+            </td>
+        </tr>
+</table>
+
+<script>
+const board = document.getElementById("board").getContext("2d");
+board.translate(600, 500);
+var samples = [];
+
+const data = {
+    it: 0.01,              // incremental time
+    tt: 2.0,               // total time
+    ms: 300,               // max samples
+    lines: []              // lines to plot: length, starting angle, angular speed, color
+        //{l: 160, a0: 0,   w:  1, stroke: "green"},
+        //{l:  47, a0: 0,   w: -3, stroke: "blue"},
+        //{l:  25, a0: 180, w: -3, stroke: "purple"}]
+};
+
+const elem_listLines = document.getElementById("listLines");
+const elem_showLines = document.getElementById("showLines");
+
+function drawLine(line, t, lp, show) {
+    const p = {
+        x: line.l * Math.cos(line.a0 * Math.PI/180 + line.w * Math.PI * t) + lp.x,
+        y: line.l * Math.sin(line.a0 * Math.PI/180 + line.w * Math.PI * t) + lp.y
+    };
+
+    if (show) {
+        board.strokeStyle = line.stroke;
+        board.beginPath();
+        board.moveTo(lp.x, -lp.y);
+        board.lineTo(p.x, -p.y);
+        board.stroke();
+        board.closePath();
+    }
+
+    return p;
+}
+
+function plotLines(d, show) {
+    board.lineWidth = 1;
+    for (let t = 0; t <= d.tt; t+=d.it) {
+        //board.clearRect(-400, -400, 800, 800);
+        
+        let lp = {x: 0, y: 0};
+        
+        for (const line of d.lines) {
+            if (line.stroke != "---") {
+                lp = drawLine(line, t, lp, show);
+            }
+        }
+
+        samples.push(lp);
+        samples = samples.slice(-d.ms);
+    }
+}
+
+function plotSamples(s) {
+    board.strokeStyle = "black";
+    board.lineWidth = 2;
+
+    board.beginPath();    
+    board.moveTo(s[0].x, -s[0].y);
+
+    for (let p of s) {
+        board.lineTo(p.x, -p.y);
+    }
+
+    board.stroke();
+    board.closePath();
+}
+
+function draw() {
+    board.clearRect(-600, -500, 1200, 1000);
+    samples.splice(0, samples.length);
+    
+    let showLines = elem_showLines.checked;
+    plotLines(data, showLines);
+    plotSamples(samples);
+}
+
+
+
+
+
+function linePropertiesToString(nl) { return nl.stroke + " len=" + nl.l + " a0=" + nl.a0 + " w=" + nl.w;}
+
+
+// row 1 -------------------------------------------------------------
+
+document.getElementById("rangeTotalTime").oninput = function() {
+    let v = parseFloat(this.value);
+    document.getElementById("rangeTotalTimeValue").innerHTML = v;
+    data.tt = v;
+    draw();
+}
+
+document.getElementById("rangeIncTime").oninput = function() {
+    let v = parseFloat(this.value);
+    document.getElementById("rangeIncTimeValue").innerHTML = v;
+    data.it = v;
+    draw();
+}
+
+document.getElementById("rangeTotalSamples").oninput = function() {
+    let v = parseInt(this.value);
+    document.getElementById("rangeTotalSamplesValue").innerHTML = v;
+    data.ms = v;
+    draw();
+}
+
+
+
+
+// row 2 -------------------------------------------------------------
+
+function addLine(nl) {
+    let opt = document.createElement('option');
+    opt.value = "";
+    opt.innerHTML = linePropertiesToString(nl);
+    elem_listLines.appendChild(opt);
+    elem_listLines.options[data.lines.length].selected = "selected";
+    
+    data.lines.push(nl);
+}
+
+function removeLine(lineNumber) {
+    if (lineNumber >= 0) {
+        data.lines.splice(lineNumber, 1);
+        elem_listLines.remove(lineNumber);
+        
+        if (data.lines.length > 0) {
+            if (lineNumber == 0) {lineNumber=1;}
+            elem_listLines.options[lineNumber-1].selected = "selected";
+        }
+    }
+}
+
+document.getElementById("buttonAddLine").onclick = function() {
+    let nl = {l: 10, a0: 0, w: 1, stroke: "gray"};    
+    addLine(nl);
+    draw();
+}
+
+document.getElementById("buttonRemoveLine").onclick = function() {
+    let lineNumber = elem_listLines.selectedIndex;
+    removeLine(lineNumber);
+    draw();
+}
+
+elem_listLines.onchange = function() {
+    let lineNumber = parseInt(this.selectedIndex);
+    let nl = data.lines[lineNumber];
+
+    //this.options[lineNumber].innerHTML = linePropertiesToString(nl);
+
+    document.getElementById("rangeLine_Color").value = nl.stroke;
+    document.getElementById("rangeLine_Len").value = nl.l;
+    document.getElementById("rangeLine_A0").value = nl.a0;
+    document.getElementById("rangeLine_W").value = nl.w;
+
+    document.getElementById("rangeLine_LenValue").innerHTML = nl.l;
+    document.getElementById("rangeLine_A0Value").innerHTML = nl.a0;
+    document.getElementById("rangeLine_WValue").innerHTML = nl.w;
+}
+
+
+
+
+// row 3 -------------------------------------------------------------
+
+document.getElementById("rangeLine_Color").onchange = function() {
+    let v = this.value;
+    let lineNumber = elem_listLines.selectedIndex;
+    if (lineNumber >= 0) {
+        data.lines[lineNumber].stroke = v;
+        elem_listLines.options[lineNumber].innerHTML = linePropertiesToString(data.lines[lineNumber]);
+        draw();
+    }
+}
+
+document.getElementById("rangeLine_Len").oninput = function() {
+    let v = parseInt(this.value);
+    let lineNumber = elem_listLines.selectedIndex;
+    if (lineNumber >= 0) {
+        document.getElementById("rangeLine_LenValue").innerHTML = v;
+        data.lines[lineNumber].l = v;
+        elem_listLines.options[lineNumber].innerHTML = linePropertiesToString(data.lines[lineNumber]);
+        draw();
+    }
+}
+
+document.getElementById("rangeLine_A0").oninput = function() {
+    let v = parseInt(this.value);
+    let lineNumber = elem_listLines.selectedIndex;
+    if (lineNumber >= 0) {
+        document.getElementById("rangeLine_A0Value").innerHTML = v;
+        data.lines[lineNumber].a0 = v;
+        elem_listLines.options[lineNumber].innerHTML = linePropertiesToString(data.lines[lineNumber]);
+        draw();
+    }
+}
+
+document.getElementById("rangeLine_W").oninput = function() {
+    let v = parseFloat(this.value);
+    let lineNumber = parseFloat(elem_listLines.selectedIndex);
+    if (lineNumber >= 0) {
+        document.getElementById("rangeLine_WValue").innerHTML = v;
+        data.lines[lineNumber].w = v;
+        elem_listLines.options[lineNumber].innerHTML = linePropertiesToString(data.lines[lineNumber]);
+        draw();
+    }
+}
+
+
+
+// row 4 -------------------------------------------------------------
+
+function bulkSet() {
+    let ta_lines = document.getElementById("bulkSet").value.split("\n");
+    
+    while (data.lines.length > 0) {
+        removeLine(0);
+    }
+
+    let lp, nl;
+    for (const line of ta_lines) {
+        lp = line.split(",");
+        nl = {stroke: lp[0].trim(), l: parseInt(lp[1].trim()), a0: parseInt(lp[2].trim()), w: parseFloat(lp[3].trim())};
+        addLine(nl);
+    }
+    
+    draw();
+}
+
+function bulkGet() {
+    elem = document.getElementById("bulkSet");
+    let result = "";
+    
+    for (const line of data.lines) {
+        result = result + line.stroke + ", " + line.l + ", " + line.a0 + ", " + line.w + "\n";
+    }
+    elem.value = result.trim();
+}
+
+
+// START -------------------------------------------------------------
+bulkSet();
+// END -------------------------------------------------------------
+
+</script>
+
+</body>
+</html>

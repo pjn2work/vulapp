@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoSketcher</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars from body */
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+        }
+        body {
+            display: flex;
+            flex-direction: column; /* Stack controls on top of canvas */
+        }
+        #appContainer { /* New wrapper for everything */
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+        }
+        #controls {
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            z-index: 10; /* Ensure controls are on top */
+            flex-shrink: 0; /* Prevent controls from shrinking */
+        }
+        button { padding: 8px 12px; margin: 5px; cursor: pointer; border: 1px solid #ccc; border-radius: 3px; }
+        button.active { background-color: #4CAF50; color: white; border-color: #4CAF50;}
+        #canvasContainer { /* New container for the canvas to manage its growth */
+            flex-grow: 1; /* Canvas container takes remaining space */
+            position: relative; /* For potential absolute positioning inside if needed */
+            background-color: #fff; /* Background for the area behind canvas */
+            display: flex; /* To center canvas if it's smaller than container */
+            justify-content: center;
+            align-items: center;
+        }
+        #drawingCanvas {
+            border: 1px solid black;
+            cursor: crosshair;
+            /* Dimensions will be set by JS to fit canvasContainer */
+        }
+        #drawingCanvas.change-color-cursor {
+            cursor: pointer;
+        }
+        .info {
+            padding: 5px 5px;
+            font-size: 0.9em;
+            color: #555;
+            background-color: #f9f9f9;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+            min-height: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+        }
+        .tool-group { border: 1px solid #eee; padding: 0 5px; margin: 5px; border-radius: 3px;}
+        .tool-group legend { font-size: 0.8em; color: #777; padding: 0 5px;}
+        #colorPalette button {
+            width: 30px; height: 30px; padding: 0; border-radius: 50%;
+            border: 2px solid #ccc; margin: 3px;
+        }
+        #colorPalette button.active-color {
+            border-color: #000; box-shadow: 0 0 5px rgba(0,0,0,0.5); transform: scale(1.1);
+        }
+        #liveInfoDisplay {
+         font-weight: bold; color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="appContainer">
+        <div id="controls">
+            <fieldset class="tool-group">
+                <legend>Draw Tools</legend>
+                <button id="toolPoint">Point</button>
+                <button id="toolLine">Line (shift)</button>
+                <button id="toolCircle">Circle (C-R)</button>
+                <button id="toolTriangle">Triangle (Edge)</button>
+                <button id="toolRectangle">Rectangle (shift)</button>
+                <button id="toolPentagon">Pentagon (Edge)</button>
+                <button id="toolHexagon">Hexagon (Edge)</button>
+                <button id="toolEraser">Eraser</button>
+            </fieldset>
+            <fieldset class="tool-group">
+                <legend>Color Palette</legend>
+                <div id="colorPalette"></div>
+            </fieldset>
+            <fieldset class="tool-group">
+                <legend>View</legend>
+                <button id="zoomInBtn">Zoom In (+)</button>
+                <button id="zoomOutBtn">Zoom Out (-)</button>
+                <button id="resetViewBtn">Reset View</button>
+            </fieldset>
+            <fieldset class="tool-group">
+                <legend>Actions</legend>
+                <button id="toolChangeColor">Change Color</button>
+                <button id="clearCanvas">Clear All</button>
+            </fieldset>
+        </div>
+
+        <div id="canvasContainer">
+            <canvas id="drawingCanvas"></canvas>
+        </div>
+         <div class="info">
+            <p id="statusMessage">Tool: Point.</p>
+            <p id="liveInfoDisplay"></p>
+        </div>
+    </div>
+
+    <script src="/web/geosketcher.js"></script>
+</body>
+</html>

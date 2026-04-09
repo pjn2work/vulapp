@@ -237,6 +237,27 @@ def logout():
     return redirect(url_for('web.index'))
 
 
+# Drawing Tools
+@web_bp.route('/web/geosketcher')
+def geosketcher():
+    """GeoSketcher - Interactive geometric drawing tool."""
+    return render_template('GeoSketcher_a.html')
+
+
+@web_bp.route('/web/polar')
+def polar_plotter():
+    """Polar Plotter - Spirograph pattern generator."""
+    return render_template('polar.html')
+
+
+@web_bp.route('/web/geosketcher.js')
+def geosketcher_js():
+    """Serve the GeoSketcher JavaScript file."""
+    from flask import current_app
+    templates_folder = current_app.jinja_loader.searchpath[0]
+    return send_from_directory(templates_folder, 'geosketcher.js', mimetype='application/javascript')
+
+
 # File Upload and Download Routes
 @web_bp.route('/web/upload-file', methods=['POST'])
 def upload_file():
