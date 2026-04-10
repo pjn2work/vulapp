@@ -635,6 +635,23 @@ function calculateFourier() {
 }
 
 function testReconstruction() {
+    // Clear previous test
+    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+    // Redraw original black line
+    drawingCtx.strokeStyle = "black";
+    drawingCtx.lineWidth = 2;
+    drawingCtx.lineCap = "round";
+    drawingCtx.lineJoin = "round";
+    drawingCtx.beginPath();
+    drawingCtx.moveTo(drawnPoints[0].x, drawnPoints[0].y);
+    for (let i = 1; i < drawnPoints.length; i++) {
+        drawingCtx.lineTo(drawnPoints[i].x, drawnPoints[i].y);
+    }
+    // Close the curve
+    drawingCtx.lineTo(drawnPoints[0].x, drawnPoints[0].y);
+    drawingCtx.stroke();
+
     // Reconstruct the path using the calculated Fourier coefficients
     const N = drawnPoints.length;
     const reconstructedPoints = [];
