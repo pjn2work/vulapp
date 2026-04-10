@@ -222,6 +222,7 @@ purple, 25, 180, -3</textarea>
 const board = document.getElementById("board").getContext("2d");
 board.translate(600, 400);
 var samples = [];
+let shapeCenter = {x: 0, y: 0};  // Store the center offset of the drawn shape
 
 const data = {
     it: 0.01,              // incremental time
@@ -258,9 +259,11 @@ function plotLines(d, show) {
     board.lineWidth = 1;
     for (let t = 0; t <= d.tt; t+=d.it) {
         //board.clearRect(-400, -400, 800, 800);
-        
-        let lp = {x: 0, y: 0};
-        
+
+        // Start from the shape's center offset
+        // Note: Y is negated because board canvas uses inverted Y-axis (see drawLine function)
+        let lp = {x: shapeCenter.x, y: -shapeCenter.y};
+
         for (const line of d.lines) {
             if (line.stroke != "---") {
                 lp = drawLine(line, t, lp, show);
@@ -479,7 +482,12 @@ drawingCanvas.addEventListener('mousedown', function(e) {
     isDrawing = true;
     drawnPoints = [];
     currentQualityLevels = null;
+    shapeCenter = {x: 0, y: 0};  // Reset center offset for new drawing
     document.getElementById("frequencyInfo").style.display = "none";
+
+    // Clear the canvas for new drawing
+    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
     const rect = drawingCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -541,7 +549,12 @@ drawingCanvas.addEventListener('touchstart', function(e) {
     isDrawing = true;
     drawnPoints = [];
     currentQualityLevels = null;
+    shapeCenter = {x: 0, y: 0};  // Reset center offset for new drawing
     document.getElementById("frequencyInfo").style.display = "none";
+
+    // Clear the canvas for new drawing
+    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
     const touch = e.touches[0];
     const rect = drawingCanvas.getBoundingClientRect();
     const x = touch.clientX - rect.left;
@@ -607,6 +620,7 @@ document.getElementById("buttonClearDrawing").onclick = function() {
     drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
     drawnPoints = [];
     currentQualityLevels = null;
+    shapeCenter = {x: 0, y: 0};  // Reset center offset
     document.getElementById("errorMetrics").style.display = "none";
     document.getElementById("frequencyInfo").style.display = "none";
 };
@@ -799,6 +813,22 @@ function calculateFourier() {
     if (drawnPoints.length < 3) return;
 
     const numTerms = parseInt(document.getElementById("rangeFourierTerms").value);
+
+    // Store the center offset for proper reconstruction on first and third canvas
+    let centerX = 0, centerY = 0;
+    for (let p of drawnPoints) {
+        centerX += p.x;
+        centerY += p.y;
+    }
+    centerX /= drawnPoints.length;
+    centerY /= drawnPoints.length;
+
+    // Adjust center relative to canvas center
+    // Drawing canvas is 1200x800, so center is at (600, 400)
+    shapeCenter = {
+        x: centerX - drawingCanvas.width / 2,  // Offset from canvas center
+        y: centerY - drawingCanvas.height / 2
+    };
 
     // Calculate DFT
     let coeffs = DFT(drawnPoints);
@@ -1003,18 +1033,14 @@ function animateEpicycles(timestamp) {
     const centerX = animationCanvas.width / 2;
     const centerY = animationCanvas.height / 2;
 
-    // Start at center
-    let x = centerX;
-    let y = centerY;
+    // Start at the shape's center position (canvas center + shape offset)
+    // shapeCenter is relative to first canvas (1200x800 centered at 600,400)
+    // Scale it proportionally for animation canvas
+    const scaledOffsetX = shapeCenter.x;
+    const scaledOffsetY = shapeCenter.y;
 
-    // Get center offset (DC component)
-    let dcX = 0, dcY = 0;
-    for (let p of drawnPoints) {
-        dcX += p.x;
-        dcY += p.y;
-    }
-    dcX /= drawnPoints.length;
-    dcY /= drawnPoints.length;
+    let x = centerX + scaledOffsetX;
+    let y = centerY + scaledOffsetY;
 
     // Draw each epicycle
     for (let i = 0; i < lastCoeffs.length; i++) {
