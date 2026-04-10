@@ -147,6 +147,19 @@ purple, 25, 180, -3</textarea>
 
                 <br>
 
+                <div id="frequencyInfo" style="border: 1px solid #666; padding: 10px; background: #e7f3ff; display: none;">
+                    <strong>Frequency Analysis:</strong><br>
+                    <span id="frequencyText"></span>
+                    <br><br>
+                    <div style="display: flex; gap: 5px;">
+                        <button id="btnApplyMinimum" style="flex: 1; padding: 8px; background: #5bc0de; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Apply Minimum</button>
+                        <button id="btnApplyMedium" style="flex: 1; padding: 8px; background: #f0ad4e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Apply Medium</button>
+                        <button id="btnApplyMaximum" style="flex: 1; padding: 8px; background: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Apply Maximum</button>
+                    </div>
+                </div>
+
+                <br>
+
                 <div style="border: 1px solid #666; padding: 10px; background: #f9f9f9;">
                     <strong>Instructions:</strong><br>
                     1. Click and drag on canvas to draw<br>
@@ -459,11 +472,14 @@ const drawingCanvas = document.getElementById("drawingBoard");
 const drawingCtx = drawingCanvas.getContext("2d");
 let isDrawing = false;
 let drawnPoints = [];
+let currentQualityLevels = null;
 
 // Mouse event handlers
 drawingCanvas.addEventListener('mousedown', function(e) {
     isDrawing = true;
     drawnPoints = [];
+    currentQualityLevels = null;
+    document.getElementById("frequencyInfo").style.display = "none";
     const rect = drawingCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -524,6 +540,8 @@ drawingCanvas.addEventListener('touchstart', function(e) {
     e.preventDefault(); // Prevent scrolling
     isDrawing = true;
     drawnPoints = [];
+    currentQualityLevels = null;
+    document.getElementById("frequencyInfo").style.display = "none";
     const touch = e.touches[0];
     const rect = drawingCanvas.getBoundingClientRect();
     const x = touch.clientX - rect.left;
@@ -588,7 +606,9 @@ drawingCanvas.addEventListener('touchcancel', function(e) {
 document.getElementById("buttonClearDrawing").onclick = function() {
     drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
     drawnPoints = [];
+    currentQualityLevels = null;
     document.getElementById("errorMetrics").style.display = "none";
+    document.getElementById("frequencyInfo").style.display = "none";
 };
 
 // Test reconstruction button
@@ -608,6 +628,40 @@ document.getElementById("rangeFourierTerms").oninput = function() {
 
     if (drawnPoints.length > 2) {
         calculateFourier();
+    }
+};
+
+// Helper function to apply quality level
+function applyQualityLevel(circleCount) {
+    // Update slider
+    document.getElementById("rangeFourierTerms").value = circleCount;
+    document.getElementById("rangeFourierTermsValue").innerHTML = circleCount;
+
+    // Recalculate Fourier with new circle count
+    calculateFourier();
+
+    // Auto-run test reconstruction
+    if (drawnPoints.length > 2 && lastCoeffs.length > 0) {
+        testReconstruction();
+    }
+}
+
+// Quality level buttons
+document.getElementById("btnApplyMinimum").onclick = function() {
+    if (currentQualityLevels) {
+        applyQualityLevel(currentQualityLevels.minimum);
+    }
+};
+
+document.getElementById("btnApplyMedium").onclick = function() {
+    if (currentQualityLevels) {
+        applyQualityLevel(currentQualityLevels.medium);
+    }
+};
+
+document.getElementById("btnApplyMaximum").onclick = function() {
+    if (currentQualityLevels) {
+        applyQualityLevel(currentQualityLevels.maximum);
     }
 };
 
@@ -658,6 +712,89 @@ function DFT(points) {
     return coefficients;
 }
 
+function calculateReconstructionError(coeffs, drawnPoints, numCoeffs) {
+    const N = drawnPoints.length;
+    const useCoeffs = coeffs.slice(0, numCoeffs);
+
+    // Get center
+    let centerX = 0, centerY = 0;
+    for (let p of drawnPoints) {
+        centerX += p.x;
+        centerY += p.y;
+    }
+    centerX /= N;
+    centerY /= N;
+
+    // Calculate average error
+    let totalError = 0;
+    for (let n = 0; n < N; n++) {
+        let x = 0;
+        let y = 0;
+
+        for (const c of useCoeffs) {
+            const angle = c.phase + (2 * Math.PI * c.freq * n) / N;
+            x += c.amp * Math.cos(angle);
+            y += c.amp * Math.sin(angle);
+        }
+
+        const dx = drawnPoints[n].x - (x + centerX);
+        const dy = drawnPoints[n].y - (-y + centerY);
+        const error = Math.sqrt(dx * dx + dy * dy);
+        totalError += error;
+    }
+
+    return totalError / N;
+}
+
+function findOptimalCircleCounts(coeffs, drawnPoints) {
+    // Minimum quality: amplitude > 1 (at least 1 circle)
+    const minimum = Math.max(1, coeffs.filter(c => c.amp > 1).length);
+    const minError = calculateReconstructionError(coeffs, drawnPoints, minimum);
+
+    // Medium quality: find number of circles for ~2px error
+    let medium = minimum;
+    let medError = minError;
+    for (let i = minimum; i <= coeffs.length; i += Math.max(1, Math.floor(coeffs.length / 20))) {
+        const error = calculateReconstructionError(coeffs, drawnPoints, i);
+        if (error <= 2.0) {
+            medium = i;
+            medError = error;
+            break;
+        }
+    }
+
+    // Maximum quality: find number of circles for ~1px error
+    let maximum = medium;
+    let maxError = medError;
+    for (let i = medium; i <= coeffs.length; i += Math.max(1, Math.floor(coeffs.length / 20))) {
+        const error = calculateReconstructionError(coeffs, drawnPoints, i);
+        if (error <= 1.0) {
+            maximum = i;
+            maxError = error;
+            break;
+        }
+    }
+
+    // If we never reached the target, use more circles
+    if (medium === minimum) {
+        medium = Math.min(minimum * 3, coeffs.length);
+        medError = calculateReconstructionError(coeffs, drawnPoints, medium);
+    }
+    if (maximum === medium) {
+        maximum = Math.min(medium * 2, coeffs.length);
+        maxError = calculateReconstructionError(coeffs, drawnPoints, maximum);
+    }
+
+    return {
+        minimum,
+        minError,
+        medium,
+        medError,
+        maximum,
+        maxError
+    };
+}
+
 function calculateFourier() {
     if (drawnPoints.length < 3) return;
 
@@ -669,11 +806,35 @@ function calculateFourier() {
     // Sort by amplitude (largest first)
     coeffs.sort((a, b) => b.amp - a.amp);
 
+    // Find optimal circle counts for different quality levels (use full coeffs)
+    const qualityLevels = findOptimalCircleCounts(coeffs, drawnPoints);
+
+    // Store globally for button access
+    currentQualityLevels = qualityLevels;
+
     // Take only the requested number of terms
     coeffs = coeffs.slice(0, Math.min(numTerms, coeffs.length));
 
     // Store for testing
     lastCoeffs = coeffs;
+
+    // Display frequency analysis
+    const freqInfo = document.getElementById("frequencyInfo");
+    const freqText = document.getElementById("frequencyText");
+    freqText.innerHTML = `<strong>Quality Recommendations:</strong><br>
+                         <span style="color: #5bc0de;">● Minimum: <strong>${qualityLevels.minimum}</strong> circles (${qualityLevels.minError.toFixed(2)}px error)</span><br>
+                         <span style="color: #f0ad4e;">● Medium: <strong>${qualityLevels.medium}</strong> circles (${qualityLevels.medError.toFixed(2)}px error)</span><br>
+                         <span style="color: #5cb85c;">● Maximum: <strong>${qualityLevels.maximum}</strong> circles (${qualityLevels.maxError.toFixed(2)}px error)</span><br>
+                         <br>
+                         <span style="font-size: 0.9em; color: #666;">
+                         Currently using: <strong>${numTerms}</strong> circles
+                         ${numTerms > qualityLevels.maximum
+                            ? ' (⚠ more than needed for max quality)'
+                            : numTerms < qualityLevels.minimum
+                            ? ' (⚠ below minimum quality)'
+                            : ' ✓'}
+                         </span>`;
+    freqInfo.style.display = "block";
 
     // Convert to polar format: color, length, starting_angle, angular_speed
     // Note: For the rotating circles:
