@@ -21,8 +21,8 @@
             <td>
                 <div style="width: 320px;">
                     <label for="rangeTotalTime">Time total</label>
-                    <input type="range" id="rangeTotalTime" step="0.05" min="0.0" max="20.0" value="2.1">
-                    <span id="rangeTotalTimeValue">2.1</span>
+                    <input type="range" id="rangeTotalTime" step="0.025" min="0.1" max="2.0" value="1.0">
+                    <span id="rangeTotalTimeValue">1.0</span>
                     
                     <br>
 
@@ -116,6 +116,55 @@ purple, 25, 180, -3</textarea>
                 </canvas>
             </td>
         </tr>
+</table>
+
+<hr style="margin: 40px 0;">
+
+<h2 style="text-align: center; font-size: 24pt;">Draw Your Shape (Fourier Analysis)</h2>
+
+<table>
+    <tr>
+        <td>
+            <div style="width: 320px;">
+                <label for="rangeFourierTerms">Number of circles</label>
+                <input type="range" id="rangeFourierTerms" step="1" min="3" max="500" value="50">
+                <span id="rangeFourierTermsValue">50</span>
+
+                <br><br>
+
+                <button type="button" id="buttonClearDrawing" style="width: 100%; padding: 10px; font-size: 14pt;">Clear Drawing</button>
+
+                <br><br>
+
+                <button type="button" id="buttonTestReconstruction" style="width: 100%; padding: 10px; font-size: 14pt; background: #4CAF50; color: white;">Test Reconstruction</button>
+
+                <br><br>
+
+                <div id="errorMetrics" style="border: 1px solid #666; padding: 10px; background: #fff3cd; display: none;">
+                    <strong>Error Metrics:</strong><br>
+                    <span id="errorText"></span>
+                </div>
+
+                <br>
+
+                <div style="border: 1px solid #666; padding: 10px; background: #f9f9f9;">
+                    <strong>Instructions:</strong><br>
+                    1. Click and drag on canvas to draw<br>
+                    2. Release to calculate Fourier circles<br>
+                    3. Adjust slider to change accuracy<br>
+                    4. Click "Bulk set lines" above to visualize<br>
+                    <br>
+                    <small>Curve will auto-close (first↔last point)</small>
+                </div>
+            </div>
+        </td>
+
+        <td>
+            <canvas id="drawingBoard" width="800" height="600" style="border: 2px solid #333; background: white; cursor: crosshair;">
+                Your browser doesn't support the canvas element.
+            </canvas>
+        </td>
+    </tr>
 </table>
 
 <script>
@@ -364,6 +413,253 @@ function bulkGet() {
 // START -------------------------------------------------------------
 bulkSet();
 // END -------------------------------------------------------------
+
+
+// FOURIER DRAWING SECTION ==========================================
+
+const drawingCanvas = document.getElementById("drawingBoard");
+const drawingCtx = drawingCanvas.getContext("2d");
+let isDrawing = false;
+let drawnPoints = [];
+
+// Mouse event handlers
+drawingCanvas.addEventListener('mousedown', function(e) {
+    isDrawing = true;
+    drawnPoints = [];
+    const rect = drawingCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    drawnPoints.push({x: x, y: y});
+});
+
+drawingCanvas.addEventListener('mousemove', function(e) {
+    if (!isDrawing) return;
+
+    const rect = drawingCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    drawnPoints.push({x: x, y: y});
+
+    // Draw in real-time
+    drawingCtx.strokeStyle = "black";
+    drawingCtx.lineWidth = 2;
+    drawingCtx.lineCap = "round";
+    drawingCtx.lineJoin = "round";
+
+    if (drawnPoints.length > 1) {
+        const prev = drawnPoints[drawnPoints.length - 2];
+        drawingCtx.beginPath();
+        drawingCtx.moveTo(prev.x, prev.y);
+        drawingCtx.lineTo(x, y);
+        drawingCtx.stroke();
+    }
+});
+
+drawingCanvas.addEventListener('mouseup', function(e) {
+    if (!isDrawing) return;
+    isDrawing = false;
+
+    if (drawnPoints.length > 2) {
+        // Close the curve
+        drawingCtx.strokeStyle = "black";
+        drawingCtx.lineWidth = 2;
+        drawingCtx.beginPath();
+        const last = drawnPoints[drawnPoints.length - 1];
+        const first = drawnPoints[0];
+        drawingCtx.moveTo(last.x, last.y);
+        drawingCtx.lineTo(first.x, first.y);
+        drawingCtx.stroke();
+
+        // Calculate Fourier coefficients
+        calculateFourier();
+    }
+});
+
+drawingCanvas.addEventListener('mouseleave', function(e) {
+    if (isDrawing) {
+        isDrawing = false;
+    }
+});
+
+// Clear drawing button
+document.getElementById("buttonClearDrawing").onclick = function() {
+    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+    drawnPoints = [];
+    document.getElementById("errorMetrics").style.display = "none";
+};
+
+// Test reconstruction button
+let lastCoeffs = [];
+document.getElementById("buttonTestReconstruction").onclick = function() {
+    if (drawnPoints.length < 3 || lastCoeffs.length === 0) {
+        alert("Please draw a shape first!");
+        return;
+    }
+    testReconstruction();
+};
+
+// Fourier terms slider
+document.getElementById("rangeFourierTerms").oninput = function() {
+    let v = parseInt(this.value);
+    document.getElementById("rangeFourierTermsValue").innerHTML = v;
+
+    if (drawnPoints.length > 2) {
+        calculateFourier();
+    }
+};
+
+// DFT implementation
+function DFT(points) {
+    const N = points.length;
+    const coefficients = [];
+
+    // Center the drawing
+    let centerX = 0, centerY = 0;
+    for (let p of points) {
+        centerX += p.x;
+        centerY += p.y;
+    }
+    centerX /= N;
+    centerY /= N;
+
+    // Calculate DFT coefficients
+    for (let k = 0; k < N; k++) {
+        let re = 0;
+        let im = 0;
+
+        for (let n = 0; n < N; n++) {
+            const phi = (2 * Math.PI * k * n) / N;
+            const x = points[n].x - centerX;
+            const y = -(points[n].y - centerY);  // Negate Y to match upper canvas coordinate system
+
+            re += x * Math.cos(phi) + y * Math.sin(phi);
+            im += -x * Math.sin(phi) + y * Math.cos(phi);
+        }
+
+        re /= N;
+        im /= N;
+
+        // Convert DFT frequency index to actual frequency
+        // Frequencies > N/2 represent negative frequencies (clockwise)
+        let freq = k;
+        if (k > N / 2) {
+            freq = k - N;  // Convert to negative frequency
+        }
+
+        const amp = Math.sqrt(re * re + im * im);
+        const phase = Math.atan2(im, re);
+
+        coefficients.push({freq: freq, amp: amp, phase: phase});
+    }
+
+    return coefficients;
+}
+
+function calculateFourier() {
+    if (drawnPoints.length < 3) return;
+
+    const numTerms = parseInt(document.getElementById("rangeFourierTerms").value);
+
+    // Calculate DFT
+    let coeffs = DFT(drawnPoints);
+
+    // Sort by amplitude (largest first)
+    coeffs.sort((a, b) => b.amp - a.amp);
+
+    // Take only the requested number of terms
+    coeffs = coeffs.slice(0, Math.min(numTerms, coeffs.length));
+
+    // Store for testing
+    lastCoeffs = coeffs;
+
+    // Convert to polar format: color, length, starting_angle, angular_speed
+    // Note: For the rotating circles:
+    // - length = amplitude
+    // - starting_angle = phase in degrees (0-360)
+    // - angular_speed = 2 * frequency (for proper reconstruction when tt=1.0)
+
+    let result = "";
+    for (const c of coeffs) {
+        const color = "blue";
+        const length = Math.round(c.amp);
+        // Convert phase from radians to degrees, normalize to 0-360 range
+        let startAngle = Math.round(c.phase * 180 / Math.PI);
+        if (startAngle < 0) startAngle += 360;  // Normalize negative angles
+        const angularSpeed = 2 * c.freq;  // Scale frequency for time parameter
+
+        if (length > 0) {  // Skip very small circles
+            result += `${color}, ${length}, ${startAngle}, ${angularSpeed}\n`;
+        }
+    }
+
+    // Replace textarea content
+    document.getElementById("bulkSet").value = result.trim();
+}
+
+function testReconstruction() {
+    // Reconstruct the path using the calculated Fourier coefficients
+    const N = drawnPoints.length;
+    const reconstructedPoints = [];
+
+    // Get center
+    let centerX = 0, centerY = 0;
+    for (let p of drawnPoints) {
+        centerX += p.x;
+        centerY += p.y;
+    }
+    centerX /= N;
+    centerY /= N;
+
+    // Reconstruct path using inverse DFT
+    for (let n = 0; n < N; n++) {
+        let x = 0;
+        let y = 0;
+
+        for (const c of lastCoeffs) {
+            const angle = c.phase + (2 * Math.PI * c.freq * n) / N;
+            x += c.amp * Math.cos(angle);
+            y += c.amp * Math.sin(angle);
+        }
+
+        reconstructedPoints.push({x: x + centerX, y: -y + centerY});  // Negate Y back for canvas coordinates
+    }
+
+    // Draw reconstructed path in red on the drawing canvas
+    drawingCtx.strokeStyle = "red";
+    drawingCtx.lineWidth = 2;
+    drawingCtx.beginPath();
+    drawingCtx.moveTo(reconstructedPoints[0].x, reconstructedPoints[0].y);
+    for (let i = 1; i < reconstructedPoints.length; i++) {
+        drawingCtx.lineTo(reconstructedPoints[i].x, reconstructedPoints[i].y);
+    }
+    drawingCtx.closePath();
+    drawingCtx.stroke();
+
+    // Calculate error metrics
+    let totalError = 0;
+    let maxError = 0;
+    for (let i = 0; i < N; i++) {
+        const dx = drawnPoints[i].x - reconstructedPoints[i].x;
+        const dy = drawnPoints[i].y - reconstructedPoints[i].y;
+        const error = Math.sqrt(dx * dx + dy * dy);
+        totalError += error;
+        maxError = Math.max(maxError, error);
+    }
+    const avgError = totalError / N;
+
+    // Display error metrics
+    const errorDiv = document.getElementById("errorMetrics");
+    const errorText = document.getElementById("errorText");
+    errorText.innerHTML = `Points: ${N}<br>
+                          Coefficients used: ${lastCoeffs.length}<br>
+                          Average error: ${avgError.toFixed(2)} px<br>
+                          Max error: ${maxError.toFixed(2)} px<br>
+                          <span style="color: black;">Black = Original</span><br>
+                          <span style="color: red;">Red = Reconstructed</span>`;
+    errorDiv.style.display = "block";
+}
+
+// END FOURIER DRAWING SECTION ======================================
 
 </script>
 
