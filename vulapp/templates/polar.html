@@ -111,7 +111,7 @@ purple, 25, 180, -3</textarea>
             </td>
 
             <td>
-                <canvas id="board" width="1200" height="1000">
+                <canvas id="board" width="1200" height="800" style="border: 2px solid #333; background: white; cursor: crosshair;">
                     Your browser doesn't support the canvas element.
                 </canvas>
             </td>
@@ -160,7 +160,45 @@ purple, 25, 180, -3</textarea>
         </td>
 
         <td>
-            <canvas id="drawingBoard" width="800" height="600" style="border: 2px solid #333; background: white; cursor: crosshair;">
+            <canvas id="drawingBoard" width="1200" height="800" style="border: 2px solid #333; background: white; cursor: crosshair;">
+                Your browser doesn't support the canvas element.
+            </canvas>
+        </td>
+    </tr>
+</table>
+
+<hr style="margin: 40px 0;">
+
+<h2 style="text-align: center; font-size: 24pt;">Animation Visualization</h2>
+
+<table>
+    <tr>
+        <td>
+            <div style="width: 320px;">
+                <button type="button" id="buttonPlayAnimation" style="width: 100%; padding: 10px; font-size: 14pt; background: #4CAF50; color: white; margin-bottom: 10px;">▶ Play Animation</button>
+
+                <button type="button" id="buttonPauseAnimation" style="width: 100%; padding: 10px; font-size: 14pt; background: #ff9800; color: white; margin-bottom: 10px;">⏸ Pause</button>
+
+                <button type="button" id="buttonResetAnimation" style="width: 100%; padding: 10px; font-size: 14pt; background: #f44336; color: white; margin-bottom: 20px;">↺ Reset</button>
+
+                <label for="rangeAnimationSpeed">Animation Speed</label>
+                <input type="range" id="rangeAnimationSpeed" step="0.5" min="1" max="10" value="5">
+                <span id="rangeAnimationSpeedValue">5</span> sec
+
+                <br><br>
+
+                <div style="border: 1px solid #666; padding: 10px; background: #f9f9f9;">
+                    <strong>Visualization:</strong><br>
+                    <span style="color: gray;">● Gray circles</span> = Epicycles<br>
+                    <span style="color: green;">━ Green lines</span> = Rotating vectors<br>
+                    <span style="color: cyan;">━ Cyan trail</span> = Final path<br>
+                    <span style="color: red;">● Red dot</span> = Current position<br>
+                </div>
+            </div>
+        </td>
+
+        <td>
+            <canvas id="animationCanvas" width="1200" height="800" style="border: 2px solid #333; background: #1a1a1a;">
                 Your browser doesn't support the canvas element.
             </canvas>
         </td>
@@ -169,7 +207,7 @@ purple, 25, 180, -3</textarea>
 
 <script>
 const board = document.getElementById("board").getContext("2d");
-board.translate(600, 500);
+board.translate(600, 400);
 var samples = [];
 
 const data = {
@@ -237,7 +275,7 @@ function plotSamples(s) {
 }
 
 function draw() {
-    board.clearRect(-600, -500, 1200, 1000);
+    board.clearRect(-600, -400, 1200, 800);
     samples.splice(0, samples.length);
     
     let showLines = elem_showLines.checked;
@@ -660,6 +698,141 @@ function testReconstruction() {
 }
 
 // END FOURIER DRAWING SECTION ======================================
+
+
+// ANIMATION SECTION =================================================
+
+const animationCanvas = document.getElementById("animationCanvas");
+const animCtx = animationCanvas.getContext("2d");
+let animationId = null;
+let isAnimating = false;
+let animationStartTime = 0;
+let animationDuration = 5000; // milliseconds
+let animationTrail = [];
+
+// Animation controls
+document.getElementById("buttonPlayAnimation").onclick = function() {
+    if (lastCoeffs.length === 0) {
+        alert("Please draw a shape first!");
+        return;
+    }
+    isAnimating = true;
+    animationStartTime = performance.now();
+    animateEpicycles(performance.now());
+};
+
+document.getElementById("buttonPauseAnimation").onclick = function() {
+    isAnimating = false;
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
+};
+
+document.getElementById("buttonResetAnimation").onclick = function() {
+    isAnimating = false;
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
+    animationTrail = [];
+    animationStartTime = 0;
+    animCtx.fillStyle = "#1a1a1a";
+    animCtx.fillRect(0, 0, animationCanvas.width, animationCanvas.height);
+};
+
+document.getElementById("rangeAnimationSpeed").oninput = function() {
+    let v = parseFloat(this.value);
+    document.getElementById("rangeAnimationSpeedValue").innerHTML = v;
+    animationDuration = v * 1000;
+};
+
+function animateEpicycles(timestamp) {
+    if (!isAnimating) return;
+
+    const elapsed = timestamp - animationStartTime;
+    const t = (elapsed % animationDuration) / animationDuration; // 0 to 1
+
+    // Fade effect for trail
+    animCtx.fillStyle = "rgba(26, 26, 26, 0.15)";
+    animCtx.fillRect(0, 0, animationCanvas.width, animationCanvas.height);
+
+    const centerX = animationCanvas.width / 2;
+    const centerY = animationCanvas.height / 2;
+
+    // Start at center
+    let x = centerX;
+    let y = centerY;
+
+    // Get center offset (DC component)
+    let dcX = 0, dcY = 0;
+    for (let p of drawnPoints) {
+        dcX += p.x;
+        dcY += p.y;
+    }
+    dcX /= drawnPoints.length;
+    dcY /= drawnPoints.length;
+
+    // Draw each epicycle
+    for (let i = 0; i < lastCoeffs.length; i++) {
+        const c = lastCoeffs[i];
+        const freq = c.freq;
+        const angle = c.phase + (2 * Math.PI * freq * t);
+
+        const prevX = x;
+        const prevY = y;
+
+        // Calculate rotation
+        const dx = c.amp * Math.cos(angle);
+        const dy = c.amp * Math.sin(angle);
+
+        x += dx;
+        y -= dy;  // Negate Y to match canvas coordinate system
+
+        // Draw circle (gray)
+        animCtx.beginPath();
+        animCtx.arc(prevX, prevY, c.amp, 0, Math.PI * 2);
+        animCtx.strokeStyle = "rgba(128, 128, 128, 0.3)";
+        animCtx.lineWidth = 1;
+        animCtx.stroke();
+
+        // Draw line from previous center to current point (green)
+        animCtx.beginPath();
+        animCtx.moveTo(prevX, prevY);
+        animCtx.lineTo(x, y);
+        animCtx.strokeStyle = "rgba(0, 255, 0, 0.5)";
+        animCtx.lineWidth = 2;
+        animCtx.stroke();
+    }
+
+    // Store trail point
+    animationTrail.push({x: x, y: y});
+    if (animationTrail.length > 500) {
+        animationTrail.shift();
+    }
+
+    // Draw trail (cyan)
+    if (animationTrail.length > 1) {
+        animCtx.beginPath();
+        animCtx.moveTo(animationTrail[0].x, animationTrail[0].y);
+        for (let i = 1; i < animationTrail.length; i++) {
+            animCtx.lineTo(animationTrail[i].x, animationTrail[i].y);
+        }
+        animCtx.strokeStyle = "#00ffff";
+        animCtx.lineWidth = 2;
+        animCtx.stroke();
+    }
+
+    // Draw current position (red dot)
+    animCtx.beginPath();
+    animCtx.arc(x, y, 5, 0, Math.PI * 2);
+    animCtx.fillStyle = "#ff0055";
+    animCtx.fill();
+
+    animationId = requestAnimationFrame(animateEpicycles);
+}
+
+// END ANIMATION SECTION =============================================
 
 </script>
 
