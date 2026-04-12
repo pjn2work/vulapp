@@ -435,9 +435,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
    canvas.addEventListener('mousemove', (e) => { mouseCanvasPos = getRawMouseCanvasPos(e); redrawCanvas(); });
 
-   canvas.addEventListener('click', (e) => {
-      mouseCanvasPos = getRawMouseCanvasPos(e);
-      let clickedWorldPos = getSnapPoint(mouseCanvasPos);
+   // Touch event handlers for touch screens
+   canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Prevent scrolling
+      if (e.touches.length === 1) {
+         const touch = e.touches[0];
+         mouseCanvasPos = getRawMouseCanvasPos(touch);
+         handleCanvasClick(mouseCanvasPos);
+      }
+   }, { passive: false });
+
+   canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // Prevent scrolling
+      if (e.touches.length === 1) {
+         const touch = e.touches[0];
+         mouseCanvasPos = getRawMouseCanvasPos(touch);
+         redrawCanvas();
+      }
+   }, { passive: false });
+
+   canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      redrawCanvas();
+   }, { passive: false });
+
+   // Consolidated click/tap handler
+   function handleCanvasClick(clickCanvasPos) {
+      let clickedWorldPos = getSnapPoint(clickCanvasPos);
 
       if (!currentTool) { console.warn("No tool selected for click."); return; }
 
@@ -550,6 +574,12 @@ document.addEventListener('DOMContentLoaded', () => {
          default: console.warn("Unknown tool action:", currentTool);
       }
       redrawCanvas();
+   }
+
+   // Mouse click handler
+   canvas.addEventListener('click', (e) => {
+      mouseCanvasPos = getRawMouseCanvasPos(e);
+      handleCanvasClick(mouseCanvasPos);
    });
 
    const toolButtons = { /* ... same ... */
