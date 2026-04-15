@@ -231,20 +231,24 @@ def graphql_schema_api():
 @api_blp.route('/v1/oauth2/token', methods=['POST'])
 def oauth2_token():
     """
-    OAuth2 Token Exchange Endpoint.
-    Exchange an authorization code for an access token.
+    OAuth2 Token Endpoint. Supports two grant types:
+
+    1. authorization_code - Exchange an auth code for a token (user flow)
+    2. client_credentials - Get a token directly with client ID/secret (machine-to-machine)
 
     VULNERABLE:
-    - No client_secret validation (accepts any or none)
+    - No client_secret validation on authorization_code grant (accepts any or none)
     - Tokens are predictable (MD5-based)
     - Auth codes can be replayed (not invalidated)
+    - client_credentials accepts any scope without validation
 
     POST body (form or JSON):
-        grant_type: authorization_code
-        code: <authorization_code>
+        grant_type: authorization_code | client_credentials
+        code: <authorization_code>          (authorization_code only)
         client_id: vulapp-client-001
         client_secret: super-secret-client-secret
-        redirect_uri: <must match original>
+        redirect_uri: <must match original>  (authorization_code only)
+        scope: read profile                  (client_credentials only)
     """
     import hashlib
     import time
@@ -255,50 +259,83 @@ def oauth2_token():
         data = request.form.to_dict()
 
     grant_type = data.get('grant_type', '')
-    code = data.get('code', '')
     client_id = data.get('client_id', '')
-    redirect_uri = data.get('redirect_uri', '')
+    client_secret = data.get('client_secret', '')
+    scope = data.get('scope', 'read')
 
-    if grant_type != 'authorization_code':
-        return {"error": "unsupported_grant_type",
-                "error_description": "Only authorization_code grant is supported"}, 400
+    # ---- Client Credentials Grant ----
+    if grant_type == 'client_credentials':
+        from vulapp.config import OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
 
-    if not code or code not in OAUTH2_AUTH_CODES:
-        return {"error": "invalid_grant",
-                "error_description": "Authorization code is invalid or expired"}, 400
+        # VULNERABLE: Accepts any scope without validation
+        # A real implementation should restrict scopes per client
 
-    code_data = OAUTH2_AUTH_CODES[code]
+        if client_id != OAUTH2_CLIENT_ID or client_secret != OAUTH2_CLIENT_SECRET:
+            return {"error": "invalid_client",
+                    "error_description": "Invalid client_id or client_secret"}, 401
 
-    if time.time() > code_data['expires']:
-        del OAUTH2_AUTH_CODES[code]
-        return {"error": "invalid_grant",
-                "error_description": "Authorization code has expired"}, 400
+        # Generate access token (VULNERABLE: predictable - MD5 of client_id + timestamp)
+        token_input = f"{client_id}{int(time.time())}"
+        access_token = hashlib.md5(token_input.encode()).hexdigest()
 
-    # VULNERABLE: No client_secret validation - accepts any value or none
-    # A real implementation MUST validate client_secret
+        OAUTH2_TOKENS[access_token] = {
+            'client_id': client_id,
+            'username': f"service-account-{client_id}",
+            'scope': scope,
+            'expires': time.time() + 3600,  # 1 hour
+        }
 
-    # VULNERABLE: No redirect_uri matching enforcement
-    # A real implementation MUST verify redirect_uri matches the one from authorization
+        return {
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "scope": scope,
+        }, 200
 
-    # VULNERABLE: Auth code NOT invalidated after use (replay attacks possible)
+    # ---- Authorization Code Grant ----
+    if grant_type == 'authorization_code':
+        code = data.get('code', '')
+        redirect_uri = data.get('redirect_uri', '')
 
-    # Generate access token (VULNERABLE: predictable - MD5 of code + timestamp)
-    token_input = f"{code}{int(time.time())}"
-    access_token = hashlib.md5(token_input.encode()).hexdigest()
+        if not code or code not in OAUTH2_AUTH_CODES:
+            return {"error": "invalid_grant",
+                    "error_description": "Authorization code is invalid or expired"}, 400
 
-    OAUTH2_TOKENS[access_token] = {
-        'client_id': client_id or code_data['client_id'],
-        'username': code_data['username'],
-        'scope': code_data['scope'],
-        'expires': time.time() + 3600,  # 1 hour
-    }
+        code_data = OAUTH2_AUTH_CODES[code]
 
-    return {
-        "access_token": access_token,
-        "token_type": "Bearer",
-        "expires_in": 3600,
-        "scope": code_data['scope'],
-    }, 200
+        if time.time() > code_data['expires']:
+            del OAUTH2_AUTH_CODES[code]
+            return {"error": "invalid_grant",
+                    "error_description": "Authorization code has expired"}, 400
+
+        # VULNERABLE: No client_secret validation - accepts any value or none
+        # A real implementation MUST validate client_secret
+
+        # VULNERABLE: No redirect_uri matching enforcement
+        # A real implementation MUST verify redirect_uri matches the one from authorization
+
+        # VULNERABLE: Auth code NOT invalidated after use (replay attacks possible)
+
+        # Generate access token (VULNERABLE: predictable - MD5 of code + timestamp)
+        token_input = f"{code}{int(time.time())}"
+        access_token = hashlib.md5(token_input.encode()).hexdigest()
+
+        OAUTH2_TOKENS[access_token] = {
+            'client_id': client_id or code_data['client_id'],
+            'username': code_data['username'],
+            'scope': code_data['scope'],
+            'expires': time.time() + 3600,  # 1 hour
+        }
+
+        return {
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "scope": code_data['scope'],
+        }, 200
+
+    return {"error": "unsupported_grant_type",
+            "error_description": "Supported grant types: authorization_code, client_credentials"}, 400
 
 
 @api_blp.route('/v1/oauth2/userinfo', methods=['GET'])

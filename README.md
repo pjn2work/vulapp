@@ -60,7 +60,7 @@ These pages require specific authentication or headers to access. All `/web/welc
 *   **`/api/v1/is-valid-token`**: Validates the Bearer token in the `token` header.
 *   **`/api/v1/graphql`**: GraphQL API endpoint (JSON). Vulnerable to **SQL Injection**, **Introspection**, exposes **password field**.
 *   **`/api/v1/graphql/schema`**: GraphQL schema introspection (returns JSON).
-*   **`/api/v1/oauth2/token`**: OAuth2 token exchange. Vulnerable to **missing client_secret validation**, **auth code replay**.
+*   **`/api/v1/oauth2/token`**: OAuth2 token endpoint. Supports `authorization_code` and `client_credentials` grants. Vulnerable to **missing client_secret validation** (auth code grant), **auth code replay**, **unrestricted scopes** (client credentials).
 *   **`/api/v1/oauth2/userinfo`**: OAuth2 protected user profile (requires Bearer token).
 
 ---
@@ -204,7 +204,7 @@ VulApp implements a simulated OAuth2 Authorization Code flow with intentional vu
 | `/web/oauth2/authorize` | GET/POST | Web | Authorization + consent screen |
 | `/web/oauth2/callback` | GET | Web | Receives auth code, interactive token exchange |
 | `/web/oauth2/profile` | GET | Web/API | Protected resource (accepts Bearer token or `?token=`) |
-| `/api/v1/oauth2/token` | POST | API | Exchange auth code for access token |
+| `/api/v1/oauth2/token` | POST | API | Token endpoint (authorization_code + client_credentials) |
 | `/api/v1/oauth2/userinfo` | GET | API | Returns user profile with valid Bearer token |
 
 ### How to Use (Step by Step)
@@ -268,6 +268,52 @@ curl http://localhost:5000/api/v1/oauth2/userinfo \
 }
 ```
 
+### Client Credentials Grant (API-only)
+
+No browser, no user, no redirects. The application authenticates as itself with a single API call.
+
+#### 1. Get Token with Client Credentials
+
+```bash
+curl -X POST http://localhost:5000/api/v1/oauth2/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "client_credentials",
+    "client_id": "vulapp-client-001",
+    "client_secret": "super-secret-client-secret",
+    "scope": "read profile"
+  }'
+```
+
+**Response:**
+```json
+{
+  "access_token": "a1b2c3d4e5f6...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": "read profile"
+}
+```
+
+#### 2. Use the Token
+
+```bash
+curl http://localhost:5000/api/v1/oauth2/userinfo \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+**Response:**
+```json
+{
+  "sub": "service-account-vulapp-client-001",
+  "username": "service-account-vulapp-client-001",
+  "email": "service-account-vulapp-client-001@vulapp.local",
+  "scope": "read profile"
+}
+```
+
+Note: The token represents the application itself, not a user. The username is `service-account-<client_id>`.
+
 ### OAuth2 Vulnerabilities
 
 This OAuth2 implementation contains the following intentional vulnerabilities:
@@ -289,6 +335,12 @@ This OAuth2 implementation contains the following intentional vulnerabilities:
     /web/oauth2/profile?token=<ACCESS_TOKEN>
     ```
 6.  **Predictable Auth Codes** — Codes are generated using MD5 of username + timestamp, making them guessable.
+7.  **Unrestricted Scopes (Client Credentials)** — The `client_credentials` grant accepts any `scope` value without validation. Request `admin`, `write delete`, or anything else and it will be granted:
+    ```bash
+    curl -X POST http://localhost:5000/api/v1/oauth2/token \
+      -H "Content-Type: application/json" \
+      -d '{"grant_type":"client_credentials","client_id":"vulapp-client-001","client_secret":"super-secret-client-secret","scope":"admin write delete"}'
+    ```
 
 ---
 
