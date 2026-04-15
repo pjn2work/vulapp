@@ -5,7 +5,10 @@ from flask.views import MethodView
 from flask_smorest import Blueprint
 from graphql import get_introspection_query
 from vulapp.auth import requires_basic_auth, requires_secret_header, requires_secret_cookie, requires_auth_token
-from vulapp.config import USERNAME, PASSWORD, TOKEN, PREFIX, DATABASE
+from vulapp.config import (
+    USERNAME, PASSWORD, TOKEN, PREFIX, DATABASE,
+    OAUTH2_AUTH_CODES, OAUTH2_TOKENS
+)
 from vulapp.schemas import (
     OtpArgsSchema, OtpResponseSchema, UserSearchArgsSchema,
     GetTokenArgsSchema, GetTokenResponseSchema, AuthSchema
@@ -219,3 +222,111 @@ def graphql_schema_api():
 
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+# ============================================================
+# OAuth2 Token Endpoint (Intentionally Vulnerable)
+# ============================================================
+
+@api_blp.route('/v1/oauth2/token', methods=['POST'])
+def oauth2_token():
+    """
+    OAuth2 Token Exchange Endpoint.
+    Exchange an authorization code for an access token.
+
+    VULNERABLE:
+    - No client_secret validation (accepts any or none)
+    - Tokens are predictable (MD5-based)
+    - Auth codes can be replayed (not invalidated)
+
+    POST body (form or JSON):
+        grant_type: authorization_code
+        code: <authorization_code>
+        client_id: vulapp-client-001
+        client_secret: super-secret-client-secret
+        redirect_uri: <must match original>
+    """
+    import hashlib
+    import time
+
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form.to_dict()
+
+    grant_type = data.get('grant_type', '')
+    code = data.get('code', '')
+    client_id = data.get('client_id', '')
+    redirect_uri = data.get('redirect_uri', '')
+
+    if grant_type != 'authorization_code':
+        return {"error": "unsupported_grant_type",
+                "error_description": "Only authorization_code grant is supported"}, 400
+
+    if not code or code not in OAUTH2_AUTH_CODES:
+        return {"error": "invalid_grant",
+                "error_description": "Authorization code is invalid or expired"}, 400
+
+    code_data = OAUTH2_AUTH_CODES[code]
+
+    if time.time() > code_data['expires']:
+        del OAUTH2_AUTH_CODES[code]
+        return {"error": "invalid_grant",
+                "error_description": "Authorization code has expired"}, 400
+
+    # VULNERABLE: No client_secret validation - accepts any value or none
+    # A real implementation MUST validate client_secret
+
+    # VULNERABLE: No redirect_uri matching enforcement
+    # A real implementation MUST verify redirect_uri matches the one from authorization
+
+    # VULNERABLE: Auth code NOT invalidated after use (replay attacks possible)
+
+    # Generate access token (VULNERABLE: predictable - MD5 of code + timestamp)
+    token_input = f"{code}{int(time.time())}"
+    access_token = hashlib.md5(token_input.encode()).hexdigest()
+
+    OAUTH2_TOKENS[access_token] = {
+        'client_id': client_id or code_data['client_id'],
+        'username': code_data['username'],
+        'scope': code_data['scope'],
+        'expires': time.time() + 3600,  # 1 hour
+    }
+
+    return {
+        "access_token": access_token,
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "scope": code_data['scope'],
+    }, 200
+
+
+@api_blp.route('/v1/oauth2/userinfo', methods=['GET'])
+def oauth2_userinfo():
+    """
+    OAuth2 UserInfo Endpoint - returns profile for a valid Bearer token.
+    """
+    import time
+    auth_header = request.headers.get('Authorization', '')
+
+    if not auth_header.startswith('Bearer '):
+        return {"error": "invalid_request",
+                "error_description": "Missing or malformed Authorization header. Use: Bearer <token>"}, 401
+
+    token = auth_header[7:]
+    if token not in OAUTH2_TOKENS:
+        return {"error": "invalid_token",
+                "error_description": "Token is invalid or expired"}, 401
+
+    token_data = OAUTH2_TOKENS[token]
+    if time.time() > token_data['expires']:
+        del OAUTH2_TOKENS[token]
+        return {"error": "invalid_token",
+                "error_description": "Token has expired"}, 401
+
+    return {
+        "sub": token_data['username'],
+        "username": token_data['username'],
+        "email": f"{token_data['username']}@vulapp.local",
+        "scope": token_data['scope'],
+    }, 200

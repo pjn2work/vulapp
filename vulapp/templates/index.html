@@ -260,6 +260,187 @@
             background: #2d2d2d;
         }
 
+        .flow-diagram {
+            background: #0a0a0a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .flow-step:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            color: #fff;
+            border-radius: 50%;
+            min-width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            color: #d1d5db;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .step-detail {
+            color: #6b7280;
+            font-size: 0.8125rem;
+        }
+
+        .step-endpoint {
+            font-family: 'Courier New', monospace;
+            color: #10b981;
+            font-size: 0.8125rem;
+        }
+
+        .step-type {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 0.5rem;
+        }
+
+        .step-type-web {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .step-type-api {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .step-arrow {
+            display: flex;
+            justify-content: center;
+            padding: 0.25rem 0;
+            color: #374151;
+            font-size: 1rem;
+        }
+
+        .code-block {
+            background: #0a0a0a;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.75rem;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8125rem;
+            color: #10b981;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+        }
+
+        .code-block .code-comment {
+            color: #6b7280;
+        }
+
+        .vuln-list {
+            list-style: none;
+            margin-top: 0.75rem;
+        }
+
+        .vuln-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 0.875rem;
+            color: #d1d5db;
+        }
+
+        .vuln-list li:last-child {
+            border-bottom: none;
+        }
+
+        .vuln-num {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 4px;
+            min-width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .vuln-code {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            color: #fca5a5;
+            font-size: 0.8125rem;
+            border: 1px solid #374151;
+        }
+
+        .oauth2-endpoints-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        .oauth2-endpoints-table th {
+            text-align: left;
+            padding: 0.625rem 0.75rem;
+            color: #9ca3af;
+            font-weight: 600;
+            border-bottom: 2px solid #2d2d2d;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .oauth2-endpoints-table td {
+            padding: 0.625rem 0.75rem;
+            border-bottom: 1px solid #1a1a1a;
+            color: #d1d5db;
+        }
+
+        .oauth2-endpoints-table td:first-child {
+            font-family: 'Courier New', monospace;
+            color: #10b981;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2rem;
@@ -299,6 +480,14 @@
                         <span class="credential-label">Secret Cookie:</span>
                         <code class="credential-value">secret-cookie=my-secret-cookie</code>
                     </div>
+                    <div class="credential-item">
+                        <span class="credential-label">OAuth2 Client:</span>
+                        <code class="credential-value">vulapp-client-001</code>
+                    </div>
+                    <div class="credential-item">
+                        <span class="credential-label">OAuth2 Secret:</span>
+                        <code class="credential-value">super-secret-client-secret</code>
+                    </div>
                 </div>
             </div>
         </div>
@@ -328,6 +517,15 @@
                         <span class="badge badge-warning">Multi-factor Auth</span>
                         <div style="margin-top: 1rem;">
                             <a href="/web/login-2fa" class="btn">Access 2FA Login</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">OAuth2 Login</div>
+                        <div class="card-description">Authorization Code Flow with consent screen</div>
+                        <span class="badge badge-danger">Open Redirect</span>
+                        <span class="badge badge-danger">No CSRF</span>
+                        <div style="margin-top: 1rem;">
+                            <a href="/web/oauth2/login" class="btn">Access OAuth2</a>
                         </div>
                     </div>
                     <div class="card">
@@ -385,6 +583,173 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">🔓</span>
+                    <h2>OAuth2 Testing Guide</h2>
+                </div>
+
+                <p style="color: #9ca3af; margin-bottom: 1.5rem;">
+                    This lab implements a simulated OAuth2 Authorization Code flow. The flow involves both
+                    browser pages (authorization/consent) and REST API calls (token exchange).
+                    Multiple intentional vulnerabilities are present for pentest practice.
+                </p>
+
+                <h3>How the Authorization Code Flow Works</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <span class="step-number">1</span>
+                        <div class="step-content">
+                            <div class="step-title">User clicks "Login with OAuth2" <span class="step-type step-type-web">Browser</span></div>
+                            <div class="step-detail">Client app redirects the user's browser to the authorization server</div>
+                            <div class="step-endpoint" style="margin-top: 0.375rem;">
+                                GET /web/oauth2/authorize?response_type=code&amp;client_id=vulapp-client-001&amp;redirect_uri=/web/oauth2/callback&amp;scope=read+profile&amp;state=random123
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-arrow">&#x25BC;</div>
+                    <div class="flow-step">
+                        <span class="step-number">2</span>
+                        <div class="step-content">
+                            <div class="step-title">User authenticates and grants consent <span class="step-type step-type-web">Browser</span></div>
+                            <div class="step-detail">The authorization server shows a login form and permission consent screen. The user enters credentials (admin / easypassword) and clicks "Authorize".</div>
+                        </div>
+                    </div>
+                    <div class="step-arrow">&#x25BC;</div>
+                    <div class="flow-step">
+                        <span class="step-number">3</span>
+                        <div class="step-content">
+                            <div class="step-title">Server redirects back with authorization code <span class="step-type step-type-web">Browser</span></div>
+                            <div class="step-detail">The browser is redirected to the callback URL with a short-lived authorization code in the URL.</div>
+                            <div class="step-endpoint" style="margin-top: 0.375rem;">
+                                /web/oauth2/callback?code=abc123def456&amp;state=random123
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-arrow">&#x25BC;</div>
+                    <div class="flow-step">
+                        <span class="step-number">4</span>
+                        <div class="step-content">
+                            <div class="step-title">Client exchanges code for access token <span class="step-type step-type-api">API</span></div>
+                            <div class="step-detail">Server-to-server POST request. The client sends the authorization code, client credentials, and gets back an access token.</div>
+                            <div class="step-endpoint" style="margin-top: 0.375rem;">POST /api/v1/oauth2/token</div>
+                        </div>
+                    </div>
+                    <div class="step-arrow">&#x25BC;</div>
+                    <div class="flow-step">
+                        <span class="step-number">5</span>
+                        <div class="step-content">
+                            <div class="step-title">Client accesses protected resources <span class="step-type step-type-api">API</span></div>
+                            <div class="step-detail">The client uses the Bearer token to call API endpoints on behalf of the user.</div>
+                            <div class="step-endpoint" style="margin-top: 0.375rem;">GET /api/v1/oauth2/userinfo (Authorization: Bearer &lt;token&gt;)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <a href="/web/oauth2/login" class="btn">Start OAuth2 Flow</a>
+                </div>
+
+                <h3 style="margin-top: 2rem;">OAuth2 Endpoints</h3>
+                <table class="oauth2-endpoints-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>/web/oauth2/login</td>
+                            <td>GET</td>
+                            <td><span class="step-type step-type-web">Web</span></td>
+                            <td>Landing page with flow overview</td>
+                        </tr>
+                        <tr>
+                            <td>/web/oauth2/authorize</td>
+                            <td>GET/POST</td>
+                            <td><span class="step-type step-type-web">Web</span></td>
+                            <td>Authorization + consent screen</td>
+                        </tr>
+                        <tr>
+                            <td>/web/oauth2/callback</td>
+                            <td>GET</td>
+                            <td><span class="step-type step-type-web">Web</span></td>
+                            <td>Receives auth code, interactive token exchange</td>
+                        </tr>
+                        <tr>
+                            <td>/web/oauth2/profile</td>
+                            <td>GET</td>
+                            <td><span class="step-type step-type-web">Web</span></td>
+                            <td>Protected resource (Bearer token or ?token=)</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/oauth2/token</td>
+                            <td>POST</td>
+                            <td><span class="step-type step-type-api">API</span></td>
+                            <td>Exchange auth code for access token</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/oauth2/userinfo</td>
+                            <td>GET</td>
+                            <td><span class="step-type step-type-api">API</span></td>
+                            <td>User profile (requires Bearer token)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 2rem;">Example: Token Exchange (curl)</h3>
+                <div class="code-block">
+                    <pre><span class="code-comment"># Step 4: Exchange authorization code for access token</span>
+curl -X POST http://localhost:5000/api/v1/oauth2/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "authorization_code",
+    "code": "&lt;AUTH_CODE_FROM_STEP_3&gt;",
+    "client_id": "vulapp-client-001",
+    "client_secret": "super-secret-client-secret",
+    "redirect_uri": "/web/oauth2/callback"
+  }'</pre>
+                </div>
+                <div class="code-block">
+                    <pre><span class="code-comment"># Step 5: Access protected resource with the token</span>
+curl http://localhost:5000/api/v1/oauth2/userinfo \
+  -H "Authorization: Bearer &lt;ACCESS_TOKEN&gt;"</pre>
+                </div>
+
+                <h3 style="margin-top: 2rem;">Intentional Vulnerabilities</h3>
+                <ul class="vuln-list">
+                    <li>
+                        <span class="vuln-num">1</span>
+                        <span><strong>Open Redirect</strong> &mdash; <code class="vuln-code">redirect_uri</code> is never validated. An attacker can change it to any URL to steal authorization codes.</span>
+                    </li>
+                    <li>
+                        <span class="vuln-num">2</span>
+                        <span><strong>No CSRF Protection</strong> &mdash; The <code class="vuln-code">state</code> parameter is passed through but never validated server-side.</span>
+                    </li>
+                    <li>
+                        <span class="vuln-num">3</span>
+                        <span><strong>Auth Code Replay</strong> &mdash; Authorization codes are not invalidated after use and can be exchanged for tokens multiple times.</span>
+                    </li>
+                    <li>
+                        <span class="vuln-num">4</span>
+                        <span><strong>No Client Secret Validation</strong> &mdash; The token endpoint accepts any value (or none) for <code class="vuln-code">client_secret</code>.</span>
+                    </li>
+                    <li>
+                        <span class="vuln-num">5</span>
+                        <span><strong>Token in Query String</strong> &mdash; <code class="vuln-code">/web/oauth2/profile?token=...</code> is accepted, leaking tokens in logs and Referer headers.</span>
+                    </li>
+                    <li>
+                        <span class="vuln-num">6</span>
+                        <span><strong>Predictable Auth Codes</strong> &mdash; Codes are generated with MD5(username + timestamp), making them guessable.</span>
+                    </li>
+                </ul>
             </div>
 
             <div class="divider"></div>

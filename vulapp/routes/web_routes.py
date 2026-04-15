@@ -8,7 +8,11 @@ import pyotp
 from flask import Blueprint, request, render_template, redirect, url_for, session, make_response, jsonify, send_from_directory
 from graphene import ObjectType, String, Schema, List, Field, Int
 from vulapp.auth import requires_basic_auth, requires_session, requires_2fa_session, requires_secret_header, requires_secret_cookie
-from vulapp.config import USERNAME, PASSWORD, TOTP_SEED, SECRET_HEADER_NAME, SECRET_HEADER_VALUE, SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE, DATABASE
+from vulapp.config import (
+    USERNAME, PASSWORD, TOTP_SEED, SECRET_HEADER_NAME, SECRET_HEADER_VALUE,
+    SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE, DATABASE,
+    OAUTH2_AUTH_CODES, OAUTH2_TOKENS
+)
 from vulapp.tracker import (
     get_client_ip, get_upload_count, increment_upload_count,
     track_file_deletion, track_file_download, MAX_FILES_PER_IP
@@ -410,3 +414,127 @@ def delete_file(filename):
         }), 200
     except Exception as e:
         return jsonify({'error': f'Failed to delete file: {str(e)}'}), 500
+
+
+# ============================================================
+# OAuth2 Authorization Code Flow (Intentionally Vulnerable)
+# ============================================================
+
+@web_bp.route('/web/oauth2/login')
+def oauth2_login():
+    """OAuth2 login page - start the authorization flow."""
+    return render_template('oauth2_login.html')
+
+
+@web_bp.route('/web/oauth2/authorize', methods=['GET', 'POST'])
+def oauth2_authorize():
+    """
+    OAuth2 Authorization Endpoint - shows consent screen.
+    VULNERABLE:
+    - No redirect_uri validation (Open Redirect)
+    - No state parameter validation (CSRF)
+    - Predictable authorization codes
+    """
+    client_id = request.args.get('client_id', '')
+    redirect_uri = request.args.get('redirect_uri', '')
+    response_type = request.args.get('response_type', '')
+    scope = request.args.get('scope', 'read')
+    state = request.args.get('state', '')
+
+    if request.method == 'POST':
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
+        action = request.form.get('action', '')
+        redirect_uri = request.form.get('redirect_uri', '')
+        client_id = request.form.get('client_id', '')
+        state = request.form.get('state', '')
+        scope = request.form.get('scope', 'read')
+
+        if action == 'deny':
+            # VULNERABLE: Open redirect - redirect_uri is not validated
+            if redirect_uri:
+                return redirect(f"{redirect_uri}?error=access_denied&state={state}")
+            return render_template('oauth2_login.html', error_message="Authorization denied.")
+
+        if username == USERNAME and password == PASSWORD:
+            import hashlib
+            import time
+            # VULNERABLE: Predictable auth code (based on timestamp + username)
+            code_input = f"{username}{int(time.time())}"
+            auth_code = hashlib.md5(code_input.encode()).hexdigest()[:16]
+
+            # Store the auth code
+            OAUTH2_AUTH_CODES[auth_code] = {
+                'client_id': client_id,
+                'redirect_uri': redirect_uri,
+                'username': username,
+                'scope': scope,
+                'expires': time.time() + 600,  # 10 minutes
+            }
+
+            # VULNERABLE: Open redirect - redirect_uri is not validated
+            if redirect_uri:
+                # VULNERABLE: Auth code in URL (can leak via Referer header)
+                sep = '&' if '?' in redirect_uri else '?'
+                return redirect(f"{redirect_uri}{sep}code={auth_code}&state={state}")
+
+            return render_template('oauth2_callback.html', code=auth_code, state=state)
+        else:
+            return render_template('oauth2_authorize.html',
+                                   client_id=client_id, redirect_uri=redirect_uri,
+                                   scope=scope, state=state,
+                                   error_message="Invalid credentials.")
+
+    if response_type != 'code':
+        return jsonify({'error': 'unsupported_response_type',
+                        'error_description': 'Only response_type=code is supported'}), 400
+
+    return render_template('oauth2_authorize.html',
+                           client_id=client_id, redirect_uri=redirect_uri,
+                           scope=scope, state=state)
+
+
+@web_bp.route('/web/oauth2/callback')
+def oauth2_callback():
+    """OAuth2 Callback - receives the authorization code and exchanges it for a token."""
+    code = request.args.get('code', '')
+    state = request.args.get('state', '')
+    error = request.args.get('error', '')
+
+    if error:
+        return render_template('oauth2_callback.html', error=error)
+
+    return render_template('oauth2_callback.html', code=code, state=state)
+
+
+@web_bp.route('/web/oauth2/profile')
+def oauth2_profile():
+    """OAuth2 protected profile page - requires valid Bearer token."""
+    import time
+    auth_header = request.headers.get('Authorization', '')
+    token = request.args.get('token', '')  # VULNERABLE: Token in query string
+
+    bearer_token = ''
+    if auth_header.startswith('Bearer '):
+        bearer_token = auth_header[7:]
+    elif token:
+        bearer_token = token
+
+    if not bearer_token or bearer_token not in OAUTH2_TOKENS:
+        return jsonify({
+            'error': 'invalid_token',
+            'error_description': 'Access token is missing, expired, or invalid.',
+            'hint': 'Get a token via /web/oauth2/login or POST /api/v1/oauth2/token'
+        }), 401
+
+    token_data = OAUTH2_TOKENS[bearer_token]
+    if time.time() > token_data['expires']:
+        del OAUTH2_TOKENS[bearer_token]
+        return jsonify({'error': 'token_expired'}), 401
+
+    return jsonify({
+        'username': token_data['username'],
+        'email': f"{token_data['username']}@vulapp.local",
+        'scope': token_data['scope'],
+        'client_id': token_data['client_id'],
+    })

@@ -16,6 +16,12 @@ PASSWORD = 'easypassword'
 TOKEN = "Sf54F-/f#${wf}!*aR.y%"
 PREFIX = "Bearer"
 
+# OAuth2 configuration
+OAUTH2_CLIENT_ID = "vulapp-client-001"
+OAUTH2_CLIENT_SECRET = "super-secret-client-secret"
+OAUTH2_AUTH_CODES = {}  # In-memory store: {code: {client_id, redirect_uri, username, expires}}
+OAUTH2_TOKENS = {}  # In-memory store: {token: {client_id, username, scope, expires}}
+
 # Flask configuration
 FLASK_CONFIG = {
     "SECRET_KEY": 'super-secret-key-for-sessions',
