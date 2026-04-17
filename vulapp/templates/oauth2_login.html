@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 Login - VulApp</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .container { width: 100%; max-width: 550px; }
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .header { text-align: center; margin-bottom: 2rem; }
+        h1 { font-size: 1.875rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem; }
+        .subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .badge {
+            display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px;
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.05em; margin-top: 0.5rem; margin-right: 0.25rem;
+        }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .flow-steps {
+            background: #0a0a0a; border: 1px solid #374151; border-radius: 8px;
+            padding: 1.25rem; margin-bottom: 1.5rem;
+        }
+        .flow-steps h3 { color: #d1d5db; font-size: 0.875rem; margin-bottom: 0.75rem; }
+        .step {
+            display: flex; align-items: flex-start; gap: 0.75rem;
+            padding: 0.5rem 0; color: #9ca3af; font-size: 0.8125rem;
+        }
+        .step-num {
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            color: #fff; border-radius: 50%; min-width: 22px; height: 22px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700;
+        }
+        .step code {
+            font-family: 'Courier New', monospace; background: #1a1a1a;
+            padding: 0.125rem 0.375rem; border-radius: 3px; color: #10b981;
+            font-size: 0.75rem;
+        }
+        .btn {
+            display: block; width: 100%; padding: 0.875rem 1.5rem; text-align: center;
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            color: #ffffff; text-decoration: none; border-radius: 6px;
+            font-weight: 600; font-size: 1rem; transition: all 0.2s ease;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(167, 139, 250, 0.3); }
+        .hint {
+            background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 6px; padding: 1rem; margin-top: 1.5rem;
+        }
+        .hint-title { font-size: 0.875rem; font-weight: 600; color: #93c5fd; margin-bottom: 0.5rem; }
+        .hint-code {
+            font-family: 'Courier New', monospace; background: #0a0a0a;
+            padding: 0.5rem 0.75rem; border-radius: 4px; color: #10b981;
+            border: 1px solid #374151; font-size: 0.8125rem;
+            display: block; margin-top: 0.375rem; word-break: break-all;
+        }
+        .error-message {
+            background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px; padding: 1rem; margin-top: 1rem;
+            color: #fca5a5; font-size: 0.875rem; font-weight: 500;
+        }
+        .back-link { text-align: center; margin-top: 1.5rem; }
+        .back-link a { color: #a78bfa; text-decoration: none; font-size: 0.875rem; }
+        .back-link a:hover { color: #c4b5fd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>OAuth2 Login</h1>
+                <p class="subtitle">Authorization Code Flow</p>
+                <span class="badge badge-danger">Open Redirect</span>
+                <span class="badge badge-danger">No CSRF (state)</span>
+                <span class="badge badge-warning">Predictable Codes</span>
+            </div>
+
+            <div class="flow-steps">
+                <h3>Authorization Code Flow</h3>
+                <div class="step">
+                    <span class="step-num">1</span>
+                    <span>Client redirects user to <code>/web/oauth2/authorize</code></span>
+                </div>
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <span>User authenticates and grants consent</span>
+                </div>
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <span>Server redirects to <code>redirect_uri</code> with auth code</span>
+                </div>
+                <div class="step">
+                    <span class="step-num">4</span>
+                    <span>Client exchanges code for token via <code>POST /api/v1/oauth2/token</code></span>
+                </div>
+                <div class="step">
+                    <span class="step-num">5</span>
+                    <span>Client accesses <code>/api/v1/oauth2/userinfo</code> with Bearer token</span>
+                </div>
+            </div>
+
+            <a href="/web/oauth2/authorize?response_type=code&client_id=vulapp-client-001&redirect_uri=/web/oauth2/callback&scope=read+profile&state=random123" class="btn">
+                Start OAuth2 Flow
+            </a>
+
+            <div class="hint">
+                <div class="hint-title">Client Credentials</div>
+                <code class="hint-code">client_id: vulapp-client-001</code>
+                <code class="hint-code">client_secret: super-secret-client-secret</code>
+            </div>
+
+            <div class="hint">
+                <div class="hint-title">Vulnerabilities to Test</div>
+                <code class="hint-code">1. Open redirect: change redirect_uri to any URL</code>
+                <code class="hint-code">2. CSRF: state parameter is never validated</code>
+                <code class="hint-code">3. Auth codes are not invalidated after use</code>
+                <code class="hint-code">4. client_secret is not validated on token exchange</code>
+                <code class="hint-code">5. Token accepted via query string (?token=...)</code>
+            </div>
+
+            {% if error_message %}
+            <div class="error-message">{{ error_message }}</div>
+            {% endif %}
+
+            <div class="back-link">
+                <a href="/">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -201,6 +201,10 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+
+.idea/
+graphify-out/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
@@ -208,6 +212,7 @@ __marimo__/
 
 # Claude
 .claude/
+CLAUDE.md
 
 # VulApp specific
 uploads/

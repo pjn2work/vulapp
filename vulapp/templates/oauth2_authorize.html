@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorize - VulApp OAuth2</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .container { width: 100%; max-width: 450px; }
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .header { text-align: center; margin-bottom: 2rem; }
+        h1 { font-size: 1.875rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem; }
+        .subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .app-info {
+            background: #0a0a0a; border: 1px solid #374151; border-radius: 8px;
+            padding: 1rem; margin-bottom: 1.5rem; text-align: center;
+        }
+        .app-name { color: #a78bfa; font-weight: 600; font-size: 1rem; }
+        .app-detail {
+            color: #9ca3af; font-size: 0.8125rem; margin-top: 0.25rem;
+            font-family: 'Courier New', monospace;
+        }
+        .scope-box {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 6px; padding: 1rem; margin-bottom: 1.5rem;
+        }
+        .scope-title { font-size: 0.875rem; font-weight: 600; color: #fbbf24; margin-bottom: 0.5rem; }
+        .scope-list { list-style: none; }
+        .scope-list li { color: #d1d5db; font-size: 0.8125rem; padding: 0.25rem 0; }
+        .scope-list li::before { content: "✓ "; color: #10b981; font-weight: 700; }
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; font-size: 0.875rem; font-weight: 600; color: #d1d5db; margin-bottom: 0.5rem; }
+        input[type="text"], input[type="password"] {
+            width: 100%; padding: 0.75rem 1rem; background: #0a0a0a;
+            border: 1px solid #374151; border-radius: 6px; color: #ffffff;
+            font-size: 1rem; transition: all 0.2s ease;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none; border-color: #a78bfa;
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+        }
+        input::placeholder { color: #6b7280; }
+        .btn-group { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+        button {
+            flex: 1; padding: 0.875rem 1.5rem; border: none; border-radius: 6px;
+            font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
+        }
+        button:hover { transform: translateY(-2px); }
+        .btn-allow {
+            background: linear-gradient(135deg, #10b981, #059669); color: #ffffff;
+        }
+        .btn-allow:hover { box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3); }
+        .btn-deny {
+            background: #374151; color: #d1d5db;
+        }
+        .btn-deny:hover { background: #4b5563; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+        .error-message {
+            background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px; padding: 1rem; margin-top: 1rem;
+            color: #fca5a5; font-size: 0.875rem; font-weight: 500;
+        }
+        .back-link { text-align: center; margin-top: 1.5rem; }
+        .back-link a { color: #a78bfa; text-decoration: none; font-size: 0.875rem; }
+        .back-link a:hover { color: #c4b5fd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Authorize Application</h1>
+                <p class="subtitle">Sign in to grant access</p>
+            </div>
+
+            <div class="app-info">
+                <div class="app-name">{{ client_id or 'Unknown Application' }}</div>
+                <div class="app-detail">wants to access your account</div>
+                {% if redirect_uri %}
+                <div class="app-detail" style="margin-top: 0.5rem;">→ {{ redirect_uri }}</div>
+                {% endif %}
+            </div>
+
+            <div class="scope-box">
+                <div class="scope-title">Requested Permissions</div>
+                <ul class="scope-list">
+                    {% for s in scope.split() %}
+                    <li>{{ s }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <form method="POST">
+                <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+                <input type="hidden" name="client_id" value="{{ client_id }}">
+                <input type="hidden" name="state" value="{{ state }}">
+                <input type="hidden" name="scope" value="{{ scope }}">
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter username" value="admin" autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="text" id="password" name="password" placeholder="Enter password" value="easypassword">
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" name="action" value="allow" class="btn-allow">Authorize</button>
+                    <button type="submit" name="action" value="deny" class="btn-deny">Deny</button>
+                </div>
+            </form>
+
+            {% if error_message %}
+            <div class="error-message">{{ error_message }}</div>
+            {% endif %}
+
+            <div class="back-link">
+                <a href="/web/oauth2/login">← Back to OAuth2 Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
