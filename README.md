@@ -45,6 +45,10 @@ These pages require specific authentication or headers to access. All `/web/welc
 *   **`/web/guestbook`**: Visitor guestbook. Vulnerable to **Reflected XSS** via the `name` query parameter.
 *   **`/web/graphql`**: GraphQL query interface (HTML form). Vulnerable to **SQL Injection**, **Schema Introspection**, and exposes **password field**.
 
+### WAF Simulation
+*   **`/web/waf`**: Simulates a WAF block page (HTML). Returns 403 with WAF headers. Optional query params: `?reason=...&rule_id=...`
+*   **`/api/v1/waf`**: Simulates a WAF block response (JSON). Returns 403 with WAF headers. Optional query params: `?reason=...&rule_id=...`
+
 ### API Endpoints
 *   **`/swagger-ui`**: Interactive Swagger documentation for the API.
 *   **`/openapi.json`**: Raw OpenAPI specification.
@@ -62,6 +66,7 @@ These pages require specific authentication or headers to access. All `/web/welc
 *   **`/api/v1/graphql/schema`**: GraphQL schema introspection (returns JSON).
 *   **`/api/v1/oauth2/token`**: OAuth2 token endpoint. Supports `authorization_code` and `client_credentials` grants. Vulnerable to **missing client_secret validation** (auth code grant), **auth code replay**, **unrestricted scopes** (client credentials).
 *   **`/api/v1/oauth2/userinfo`**: OAuth2 protected user profile (requires Bearer token).
+*   **`/api/v1/waf`**: WAF block simulation (JSON). Accepts GET/POST. Returns 403 with WAF response headers (`X-WAF-Block`, `X-WAF-Rule-ID`, `X-WAF-Reason`, `X-WAF-Request-ID`, `X-WAF-Engine`).
 
 ---
 

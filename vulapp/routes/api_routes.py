@@ -1,6 +1,6 @@
 """API routes for the vulnerable application."""
 import sqlite3
-from flask import request
+from flask import request, make_response, jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from graphql import get_introspection_query
@@ -367,3 +367,44 @@ def oauth2_userinfo():
         "email": f"{token_data['username']}@vulapp.local",
         "scope": token_data['scope'],
     }, 200
+
+
+@api_blp.route('/v1/waf', methods=['GET', 'POST'])
+def waf_block_api():
+    """Simulate a WAF (Web Application Firewall) block - returns JSON."""
+    from datetime import datetime
+    from vulapp.tracker import get_client_ip
+
+    client_ip = get_client_ip()
+    request_id = f"REQ-{abs(hash(f'{client_ip}{datetime.now().isoformat()}')) % 10**12:012d}"
+    reason = request.args.get('reason', 'Potential malicious payload detected')
+    rule_id = request.args.get('rule_id', '942100')
+
+    payload = {
+        "error": "forbidden",
+        "status": 403,
+        "message": "Request blocked by Web Application Firewall",
+        "details": {
+            "request_id": request_id,
+            "client_ip": client_ip,
+            "blocked_url": request.url,
+            "method": request.method,
+            "rule_id": rule_id,
+            "reason": reason,
+            "timestamp": datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+        },
+        "hint": "If you believe this is an error, contact your administrator with the Request ID."
+    }
+
+    response = make_response(jsonify(payload), 403)
+    response.headers['X-WAF-Block'] = 'true'
+    response.headers['X-WAF-Rule-ID'] = rule_id
+    response.headers['X-WAF-Reason'] = reason
+    response.headers['X-WAF-Request-ID'] = request_id
+    response.headers['X-WAF-Engine'] = 'VulApp-WAF/3.2.1'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    response.headers['Retry-After'] = '300'
+    response.headers['Server'] = 'VulApp-WAF'
+    return response
