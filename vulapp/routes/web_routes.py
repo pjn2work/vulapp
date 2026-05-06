@@ -389,6 +389,12 @@ def download_file(filename):
     return send_from_directory(str(UPLOAD_FOLDER), filename, as_attachment=True)
 
 
+@web_bp.route('/<filename>.txt')
+def serve_txt_file(filename):
+    """Serve a .txt file from the uploads folder."""
+    return send_from_directory(str(UPLOAD_FOLDER), f"{filename}.txt")
+
+
 @web_bp.route('/web/delete/<filename>', methods=['DELETE'])
 def delete_file(filename):
     """Delete a file from the uploads folder."""
@@ -545,10 +551,8 @@ def waf_block():
     """Simulate a WAF (Web Application Firewall) block page."""
     # Capture details from the original request for display
     client_ip = request.headers.get('X-Forwarded-For', request.headers.get('X-Real-IP', request.remote_addr))
-    request_id = f"REQ-{abs(hash(f'{client_ip}{datetime.now().isoformat()}')) % 10**12:012d}"
     blocked_url = request.url
     reason = request.args.get('reason', 'Potential malicious payload detected')
-    rule_id = request.args.get('rule_id', '942100')
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -651,10 +655,8 @@ def waf_block():
                 in accordance with the configured security policy.
             </p>
             <div class="details">
-                <div class="row"><span class="label">Request ID:</span><span class="value">{request_id}</span></div>
                 <div class="row"><span class="label">Client IP:</span><span class="value">{client_ip}</span></div>
                 <div class="row"><span class="label">Blocked URL:</span><span class="value">{blocked_url}</span></div>
-                <div class="row"><span class="label">Rule ID:</span><span class="value">{rule_id}</span></div>
                 <div class="row"><span class="label">Reason:</span><span class="value">{reason}</span></div>
                 <div class="row"><span class="label">Timestamp:</span><span class="value">{datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}Z</span></div>
             </div>
@@ -667,15 +669,7 @@ def waf_block():
 </html>"""
 
     response = make_response(html, 403)
-    # WAF-typical response headers
-    response.headers['X-WAF-Block'] = 'true'
-    response.headers['X-WAF-Rule-ID'] = rule_id
-    response.headers['X-WAF-Reason'] = reason
-    response.headers['X-WAF-Request-ID'] = request_id
-    response.headers['X-WAF-Engine'] = 'VulApp-WAF/3.2.1'
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    response.headers['Retry-After'] = '300'
-    response.headers['Server'] = 'VulApp-WAF'
+    response.headers['Server'] = 'cloudflare'
     return response
