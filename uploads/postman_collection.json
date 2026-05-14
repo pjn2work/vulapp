@@ -1,0 +1,751 @@
+{
+    "info": {
+        "_postman_id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+        "name": "VulApp - Vulnerable Flask API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "api",
+            "item": [
+                {
+                    "name": "tools",
+                    "item": [
+                        {
+                            "name": "echo",
+                            "item": [
+                                {
+                                    "name": "/api/tools/echo",
+                                    "request": {
+                                        "method": "GET",
+                                        "header": [],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/tools/echo",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "tools",
+                                                "echo"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                },
+                                {
+                                    "name": "/api/tools/echo",
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"message\": \"hello\"\n}",
+                                            "options": {
+                                                "raw": {
+                                                    "headerFamily": "json",
+                                                    "language": "json"
+                                                }
+                                            }
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/tools/echo",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "tools",
+                                                "echo"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "otp",
+                            "item": [
+                                {
+                                    "name": "/api/tools/otp",
+                                    "request": {
+                                        "method": "GET",
+                                        "header": [],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/tools/otp?seed_b32=XVQ2UIGO75XRUKJO",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "tools",
+                                                "otp"
+                                            ],
+                                            "query": [
+                                                {
+                                                    "key": "seed_b32",
+                                                    "value": "XVQ2UIGO75XRUKJO"
+                                                },
+                                                {
+                                                    "key": "seed_hex",
+                                                    "value": "",
+                                                    "disabled": true
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                },
+                                {
+                                    "name": "/api/tools/otp",
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "seed_b32",
+                                                    "value": "XVQ2UIGO75XRUKJO",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "seed_hex",
+                                                    "value": "",
+                                                    "type": "text",
+                                                    "disabled": true
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/tools/otp",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "tools",
+                                                "otp"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "v1",
+                    "item": [
+                        {
+                            "name": "get-token",
+                            "item": [
+                                {
+                                    "name": "/api/v1/get-token",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "exec": [
+                                                    "var jsonData = pm.response.json();",
+                                                    "console.log(\"BEARER TOKEN: \"+jsonData.reply.token);",
+                                                    "pm.collectionVariables.set(\"bearerToken\", jsonData.reply.token);"
+                                                ],
+                                                "type": "text/javascript",
+                                                "packages": {}
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"auth\": {\n    \"username\": \"admin\",\n    \"password\": \"easypassword\"\n  }\n}",
+                                            "options": {
+                                                "raw": {
+                                                    "headerFamily": "json",
+                                                    "language": "json"
+                                                }
+                                            }
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/get-token",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "v1",
+                                                "get-token"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "get-token-form",
+                            "item": [
+                                {
+                                    "name": "/api/v1/get-token-form",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "exec": [
+                                                    "var jsonData = pm.response.json();",
+                                                    "console.log(\"BEARER TOKEN: \"+jsonData.reply.token);",
+                                                    "pm.collectionVariables.set(\"bearerToken\", jsonData.reply.token);"
+                                                ],
+                                                "type": "text/javascript",
+                                                "packages": {}
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [],
+                                        "body": {
+                                            "mode": "urlencoded",
+                                            "urlencoded": [
+                                                {
+                                                    "key": "username",
+                                                    "value": "admin",
+                                                    "type": "text"
+                                                },
+                                                {
+                                                    "key": "password",
+                                                    "value": "easypassword",
+                                                    "type": "text"
+                                                }
+                                            ]
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/get-token-form",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "v1",
+                                                "get-token-form"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "is-valid-token",
+                            "item": [
+                                {
+                                    "name": "/api/v1/is-valid-token",
+                                    "request": {
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}",
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        "method": "GET",
+                                        "header": [],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/is-valid-token",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "v1",
+                                                "is-valid-token"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "header-cookie",
+                            "item": [
+                                {
+                                    "name": "/api/v1/header-cookie",
+                                    "request": {
+                                        "method": "GET",
+                                        "header": [
+                                            {
+                                                "key": "secret-header",
+                                                "value": "{{secretHeaderValue}}",
+                                                "description": "(Required) "
+                                            },
+                                            {
+                                                "key": "Cookie",
+                                                "value": "secret-cookie={{secretCookieValue}}",
+                                                "description": "(Required) "
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/header-cookie",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "v1",
+                                                "header-cookie"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "header-cookie-auth",
+                            "item": [
+                                {
+                                    "name": "/api/v1/header-cookie-auth",
+                                    "request": {
+                                        "auth": {
+                                            "type": "basic",
+                                            "basic": [
+                                                {
+                                                    "key": "username",
+                                                    "value": "admin",
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "key": "password",
+                                                    "value": "easypassword",
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        "method": "GET",
+                                        "header": [
+                                            {
+                                                "key": "secret-header",
+                                                "value": "{{secretHeaderValue}}",
+                                                "description": "(Required) "
+                                            },
+                                            {
+                                                "key": "Cookie",
+                                                "value": "secret-cookie={{secretCookieValue}}",
+                                                "description": "(Required) "
+                                            }
+                                        ],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/header-cookie-auth",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "v1",
+                                                "header-cookie-auth"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "users",
+                            "item": [
+                                {
+                                    "name": "{user_id}",
+                                    "item": [
+                                        {
+                                            "name": "/api/v1/users/:user_id",
+                                            "request": {
+                                                "method": "GET",
+                                                "header": [],
+                                                "url": {
+                                                    "raw": "{{baseUrl}}/api/v1/users/:user_id",
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "path": [
+                                                        "api",
+                                                        "v1",
+                                                        "users",
+                                                        ":user_id"
+                                                    ],
+                                                    "variable": [
+                                                        {
+                                                            "key": "user_id",
+                                                            "value": "{{user_id}}",
+                                                            "description": "(Required) "
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "response": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "graphql",
+                            "item": [
+                                {
+                                    "name": "/api/v1/graphql",
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                            },
+                                            {
+                                                "key": "secret-header",
+                                                "value": "{{secretHeaderValue}}",
+                                                "description": "(Required) "
+                                            }
+                                        ],
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"query\": \"{ users { id username email } }\"\n}",
+                                            "options": {
+                                                "raw": {
+                                                    "headerFamily": "json",
+                                                    "language": "json"
+                                                }
+                                            }
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/graphql",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "v1",
+                                                "graphql"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                },
+                                {
+                                    "name": "schema",
+                                    "item": [
+                                        {
+                                            "name": "/api/v1/graphql/schema",
+                                            "request": {
+                                                "method": "GET",
+                                                "header": [],
+                                                "url": {
+                                                    "raw": "{{baseUrl}}/api/v1/graphql/schema",
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "path": [
+                                                        "api",
+                                                        "v1",
+                                                        "graphql",
+                                                        "schema"
+                                                    ]
+                                                }
+                                            },
+                                            "response": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "oauth2",
+                            "item": [
+                                {
+                                    "name": "token",
+                                    "item": [
+                                        {
+                                            "name": "/api/v1/oauth2/token (client_credentials)",
+                                            "event": [
+                                                {
+                                                    "listen": "test",
+                                                    "script": {
+                                                        "exec": [
+                                                            "var jsonData = pm.response.json();",
+                                                            "console.log(\"ACCESS TOKEN: \"+jsonData.access_token);",
+                                                            "pm.collectionVariables.set(\"oauthToken\", jsonData.access_token);"
+                                                        ],
+                                                        "type": "text/javascript",
+                                                        "packages": {}
+                                                    }
+                                                }
+                                            ],
+                                            "request": {
+                                                "method": "POST",
+                                                "header": [
+                                                    {
+                                                        "key": "Content-Type",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "body": {
+                                                    "mode": "raw",
+                                                    "raw": "{\n  \"grant_type\": \"client_credentials\",\n  \"client_id\": \"vulapp-client-001\",\n  \"client_secret\": \"super-secret-client-secret\",\n  \"scope\": \"read profile\"\n}",
+                                                    "options": {
+                                                        "raw": {
+                                                            "headerFamily": "json",
+                                                            "language": "json"
+                                                        }
+                                                    }
+                                                },
+                                                "url": {
+                                                    "raw": "{{baseUrl}}/api/v1/oauth2/token",
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "path": [
+                                                        "api",
+                                                        "v1",
+                                                        "oauth2",
+                                                        "token"
+                                                    ]
+                                                }
+                                            },
+                                            "response": []
+                                        },
+                                        {
+                                            "name": "/api/v1/oauth2/token (authorization_code)",
+                                            "event": [
+                                                {
+                                                    "listen": "test",
+                                                    "script": {
+                                                        "exec": [
+                                                            "var jsonData = pm.response.json();",
+                                                            "console.log(\"ACCESS TOKEN: \"+jsonData.access_token);",
+                                                            "pm.collectionVariables.set(\"oauthToken\", jsonData.access_token);"
+                                                        ],
+                                                        "type": "text/javascript",
+                                                        "packages": {}
+                                                    }
+                                                }
+                                            ],
+                                            "request": {
+                                                "method": "POST",
+                                                "header": [
+                                                    {
+                                                        "key": "Content-Type",
+                                                        "value": "application/json"
+                                                    }
+                                                ],
+                                                "body": {
+                                                    "mode": "raw",
+                                                    "raw": "{\n  \"grant_type\": \"authorization_code\",\n  \"code\": \"{{oauthAuthCode}}\",\n  \"client_id\": \"vulapp-client-001\",\n  \"client_secret\": \"super-secret-client-secret\",\n  \"redirect_uri\": \"http://localhost:5000/web/oauth2/callback\"\n}",
+                                                    "options": {
+                                                        "raw": {
+                                                            "headerFamily": "json",
+                                                            "language": "json"
+                                                        }
+                                                    }
+                                                },
+                                                "url": {
+                                                    "raw": "{{baseUrl}}/api/v1/oauth2/token",
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "path": [
+                                                        "api",
+                                                        "v1",
+                                                        "oauth2",
+                                                        "token"
+                                                    ]
+                                                }
+                                            },
+                                            "response": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "userinfo",
+                                    "item": [
+                                        {
+                                            "name": "/api/v1/oauth2/userinfo",
+                                            "request": {
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{oauthToken}}",
+                                                            "type": "string"
+                                                        }
+                                                    ]
+                                                },
+                                                "method": "GET",
+                                                "header": [],
+                                                "url": {
+                                                    "raw": "{{baseUrl}}/api/v1/oauth2/userinfo",
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "path": [
+                                                        "api",
+                                                        "v1",
+                                                        "oauth2",
+                                                        "userinfo"
+                                                    ]
+                                                }
+                                            },
+                                            "response": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "waf",
+                            "item": [
+                                {
+                                    "name": "/api/v1/waf",
+                                    "request": {
+                                        "method": "GET",
+                                        "header": [],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/waf?reason=Potential+SQL+injection+detected&rule_id=942100",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "v1",
+                                                "waf"
+                                            ],
+                                            "query": [
+                                                {
+                                                    "key": "reason",
+                                                    "value": "Potential SQL injection detected"
+                                                },
+                                                {
+                                                    "key": "rule_id",
+                                                    "value": "942100"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                },
+                                {
+                                    "name": "/api/v1/waf",
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"payload\": \"<script>alert(1)</script>\"\n}",
+                                            "options": {
+                                                "raw": {
+                                                    "headerFamily": "json",
+                                                    "language": "json"
+                                                }
+                                            }
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/waf",
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "path": [
+                                                "api",
+                                                "v1",
+                                                "waf"
+                                            ]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000"
+        },
+        {
+            "key": "bearerToken",
+            "value": ""
+        },
+        {
+            "key": "oauthToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "oauthAuthCode",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "secretHeaderValue",
+            "value": "my-secret-header",
+            "type": "string"
+        },
+        {
+            "key": "secretCookieValue",
+            "value": "my-secret-cookie",
+            "type": "string"
+        }
+    ]
+}

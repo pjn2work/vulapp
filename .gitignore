@@ -216,5 +216,6 @@ CLAUDE.md
 
 # VulApp specific
 uploads/
+!uploads/postman_collection.json
 pentest_target.db
 upload_tracker.json
