@@ -716,7 +716,7 @@
     "variable": [
         {
             "key": "baseUrl",
-            "value": "http://localhost:5000"
+            "value": "https://pjn2work.pythonanywhere.com/"
         },
         {
             "key": "bearerToken",
