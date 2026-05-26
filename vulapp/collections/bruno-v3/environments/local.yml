@@ -1,7 +1,7 @@
 name: local
 variables:
   - name: baseUrl
-    value: http://localhost:5000
+    value: https://localhost:5000
     type: text
     enabled: true
   - name: bearerToken

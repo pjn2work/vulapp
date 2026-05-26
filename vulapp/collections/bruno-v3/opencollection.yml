@@ -1,3 +1,17 @@
-version: "1"
-name: VulApp - Vulnerable Flask API
-type: collection
+opencollection: 1.0.0
+
+info:
+  name: VulApp - Vulnerable Flask API
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: https
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+bundled: false
+extensions: {}
