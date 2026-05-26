@@ -583,6 +583,122 @@
                         </div>
                     </div>
                 </div>
+
+                <h3 style="margin-top: 2rem;">All Web Endpoints</h3>
+                <table class="oauth2-endpoints-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Auth Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>/</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>Home / index page</td>
+                        </tr>
+                        <tr>
+                            <td>/web/login</td>
+                            <td>GET, POST</td>
+                            <td>None</td>
+                            <td>Simple login form &mdash; SQL Injection Bypass</td>
+                        </tr>
+                        <tr>
+                            <td>/web/welcome-simple</td>
+                            <td>GET</td>
+                            <td>Session: logged_in=True</td>
+                            <td>Post-login welcome page &mdash; Reflected XSS</td>
+                        </tr>
+                        <tr>
+                            <td>/web/login-2fa</td>
+                            <td>GET, POST</td>
+                            <td>None</td>
+                            <td>Login with TOTP 2FA</td>
+                        </tr>
+                        <tr>
+                            <td>/web/welcome-2fa</td>
+                            <td>GET</td>
+                            <td>Session: 2fa_logged_in=True</td>
+                            <td>Post-2FA welcome page &mdash; Reflected XSS</td>
+                        </tr>
+                        <tr>
+                            <td>/web/welcome-basic-auth</td>
+                            <td>GET</td>
+                            <td>Basic Auth</td>
+                            <td>Protected by HTTP Basic Auth</td>
+                        </tr>
+                        <tr>
+                            <td>/web/welcome-header</td>
+                            <td>GET</td>
+                            <td>secret-header: my-secret-header</td>
+                            <td>Protected by secret header</td>
+                        </tr>
+                        <tr>
+                            <td>/web/welcome-cookie</td>
+                            <td>GET</td>
+                            <td>secret-cookie=my-secret-cookie</td>
+                            <td>Protected by secret cookie</td>
+                        </tr>
+                        <tr>
+                            <td>/web/logout</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>Clears current session</td>
+                        </tr>
+                        <tr>
+                            <td>/web/ping</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>Network ping &mdash; Command Injection via <code>host</code> param</td>
+                        </tr>
+                        <tr>
+                            <td>/web/users</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>User search &mdash; SQL Injection via <code>search</code> param</td>
+                        </tr>
+                        <tr>
+                            <td>/web/guestbook</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>Visitor guestbook &mdash; Reflected XSS via <code>name</code> param</td>
+                        </tr>
+                        <tr>
+                            <td>/web/graphql</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>GraphQL query interface (HTML form)</td>
+                        </tr>
+                        <tr>
+                            <td>/web/oauth2/login</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>OAuth2 flow landing page</td>
+                        </tr>
+                        <tr>
+                            <td>/web/oauth2/authorize</td>
+                            <td>GET, POST</td>
+                            <td>None</td>
+                            <td>OAuth2 consent screen &mdash; Open Redirect, No CSRF</td>
+                        </tr>
+                        <tr>
+                            <td>/web/oauth2/callback</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>OAuth2 callback with interactive token exchange</td>
+                        </tr>
+                        <tr>
+                            <td>/web/oauth2/profile</td>
+                            <td>GET</td>
+                            <td>Bearer Token</td>
+                            <td>OAuth2 protected profile &mdash; Token in Query String</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
             <div class="divider"></div>
@@ -912,17 +1028,91 @@ curl http://localhost:5000/api/v1/oauth2/userinfo \
                     </div>
                 </div>
 
-                <h3 style="margin-top: 2rem;">API Tools</h3>
-                <ul class="link-list">
-                    <li><a href="/api/tools/echo?p1=test"><span class="link-icon">🔄</span> Echo Service - Reflects all request data</a></li>
-                    <li><a href="/api/tools/otp?seed_b32=XVQ2UIGO75XRUKJO"><span class="link-icon">⏱️</span> OTP Generator - Generate TOTP codes</a></li>
-                </ul>
-
-                <h3 style="margin-top: 2rem;">Testing Endpoints</h3>
-                <ul class="link-list">
-                    <li><a href="/api/v1/header-cookie"><span class="link-icon">🔍</span> Header + Cookie Validation</a></li>
-                    <li><a href="/api/v1/header-cookie-auth"><span class="link-icon">🔒</span> Basic Auth + Header + Cookie Validation</a></li>
-                </ul>
+                <h3 style="margin-top: 2rem;">All API Endpoints</h3>
+                <table class="oauth2-endpoints-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Auth Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>/api/tools/echo</td>
+                            <td>GET, POST, PUT, DELETE, PATCH</td>
+                            <td>None</td>
+                            <td>Echoes all request data (headers, params, body, cookies, session)</td>
+                        </tr>
+                        <tr>
+                            <td>/api/tools/otp</td>
+                            <td>GET, POST</td>
+                            <td>None</td>
+                            <td>TOTP code generator &mdash; params: <code>seed_b32</code> or <code>seed_hex</code></td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/get-token</td>
+                            <td>POST</td>
+                            <td>Credentials (JSON body)</td>
+                            <td>Authenticates and returns a Bearer token</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/get-token-form</td>
+                            <td>POST</td>
+                            <td>Credentials (form data)</td>
+                            <td>Authenticates and returns a Bearer token</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/is-valid-token</td>
+                            <td>GET, POST</td>
+                            <td>Bearer Token</td>
+                            <td>Validates the provided Bearer token</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/header-cookie</td>
+                            <td>GET</td>
+                            <td>Secret Header + Cookie</td>
+                            <td>Protected by secret header and cookie</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/header-cookie-auth</td>
+                            <td>GET</td>
+                            <td>Basic Auth + Header + Cookie</td>
+                            <td>Protected by Basic Auth, secret header, and cookie</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/users/&lt;user_id&gt;</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>User lookup by ID &mdash; SQL Injection</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/graphql</td>
+                            <td>POST</td>
+                            <td>Secret Header</td>
+                            <td>GraphQL API &mdash; SQLi, Introspection, exposes password field</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/graphql/schema</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>GraphQL schema via introspection</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/oauth2/token</td>
+                            <td>POST</td>
+                            <td>Client credentials</td>
+                            <td>OAuth2 token endpoint (authorization_code + client_credentials)</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/oauth2/userinfo</td>
+                            <td>GET</td>
+                            <td>Bearer Token</td>
+                            <td>OAuth2 user profile</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
