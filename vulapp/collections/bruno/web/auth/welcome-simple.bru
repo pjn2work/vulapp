@@ -1,0 +1,15 @@
+meta {
+  name: GET /web/welcome-simple
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/web/welcome-simple
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: session={{sessionCookie}}
+}

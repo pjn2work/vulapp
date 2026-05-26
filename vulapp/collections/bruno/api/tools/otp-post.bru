@@ -1,0 +1,16 @@
+meta {
+  name: POST /api/tools/otp
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/tools/otp
+  body: form-urlencoded
+  auth: none
+}
+
+body:form-urlencoded {
+  seed_b32: XVQ2UIGO75XRUKJO
+  ~seed_hex:
+}

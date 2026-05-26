@@ -1,0 +1,15 @@
+meta {
+  name: GET /web/oauth2/profile
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/web/oauth2/profile
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{oauthToken}}
+}

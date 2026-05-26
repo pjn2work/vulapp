@@ -1,0 +1,15 @@
+meta {
+  name: GET /api/v1/oauth2/userinfo
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/oauth2/userinfo
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{oauthToken}}
+}

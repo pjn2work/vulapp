@@ -1,0 +1,19 @@
+meta {
+  name: GET /web/oauth2/authorize
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/web/oauth2/authorize
+  body: none
+  auth: none
+}
+
+params:query {
+  client_id: vulapp-client-001
+  redirect_uri: http://localhost:5000/web/oauth2/callback
+  response_type: code
+  scope: read profile
+  state: randomstate123
+}

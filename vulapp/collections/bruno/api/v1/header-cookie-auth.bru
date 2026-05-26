@@ -1,0 +1,21 @@
+meta {
+  name: GET /api/v1/header-cookie-auth
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/header-cookie-auth
+  body: none
+  auth: basic
+}
+
+auth:basic {
+  username: admin
+  password: easypassword
+}
+
+headers {
+  secret-header: {{secretHeaderValue}}
+  Cookie: secret-cookie={{secretCookieValue}}
+}

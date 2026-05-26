@@ -214,6 +214,9 @@ __marimo__/
 .claude/
 CLAUDE.md
 
+# macOS
+.DS_Store
+
 # VulApp specific
 uploads/
 !uploads/postman_collection.json

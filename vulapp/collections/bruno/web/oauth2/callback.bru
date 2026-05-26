@@ -1,0 +1,16 @@
+meta {
+  name: GET /web/oauth2/callback
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/web/oauth2/callback
+  body: none
+  auth: none
+}
+
+params:query {
+  code: {{oauthAuthCode}}
+  state: randomstate123
+}

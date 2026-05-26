@@ -1,0 +1,15 @@
+meta {
+  name: GET /web/guestbook
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/web/guestbook
+  body: none
+  auth: none
+}
+
+params:query {
+  name: guest
+}

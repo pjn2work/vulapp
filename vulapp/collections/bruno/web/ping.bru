@@ -1,0 +1,15 @@
+meta {
+  name: GET /web/ping
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/web/ping
+  body: none
+  auth: none
+}
+
+params:query {
+  host: 127.0.0.1
+}

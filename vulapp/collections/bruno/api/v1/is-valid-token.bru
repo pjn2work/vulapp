@@ -1,0 +1,15 @@
+meta {
+  name: GET /api/v1/is-valid-token
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/is-valid-token
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearerToken}}
+}

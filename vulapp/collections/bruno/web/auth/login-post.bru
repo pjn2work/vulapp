@@ -1,0 +1,16 @@
+meta {
+  name: POST /web/login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/web/login
+  body: form-urlencoded
+  auth: none
+}
+
+body:form-urlencoded {
+  username: admin
+  password: easypassword
+}

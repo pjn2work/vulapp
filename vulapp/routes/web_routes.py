@@ -395,6 +395,29 @@ def serve_txt_file(filename):
     return send_from_directory(str(UPLOAD_FOLDER), f"{filename}.txt")
 
 
+@web_bp.route('/web/download-bruno-collection')
+def download_bruno_collection():
+    """Download Bruno API collection as a zip file."""
+    import zipfile
+    import io
+    from flask import send_file, current_app
+
+    bruno_path = Path(current_app.root_path) / 'collections' / 'bruno'
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for file_path in sorted(bruno_path.rglob('*')):
+            if file_path.is_file():
+                arcname = Path('vulapp-bruno-collection') / file_path.relative_to(bruno_path)
+                zf.write(file_path, arcname)
+    zip_buffer.seek(0)
+    return send_file(
+        zip_buffer,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name='vulapp-bruno-collection.zip'
+    )
+
+
 @web_bp.route('/web/delete/<filename>', methods=['DELETE'])
 def delete_file(filename):
     """Delete a file from the uploads folder."""
@@ -546,130 +569,3 @@ def oauth2_profile():
     })
 
 
-@web_bp.route('/web/waf')
-def waf_block():
-    """Simulate a WAF (Web Application Firewall) block page."""
-    # Capture details from the original request for display
-    client_ip = request.headers.get('X-Forwarded-For', request.headers.get('X-Real-IP', request.remote_addr))
-    blocked_url = request.url
-    reason = request.args.get('reason', 'Potential malicious payload detected')
-
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>403 Forbidden - Request Blocked</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
-            background: #1a1a2e;
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-        .container {{
-            max-width: 680px;
-            width: 90%;
-            background: #16213e;
-            border: 1px solid #e94560;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 40px rgba(233, 69, 96, 0.15);
-        }}
-        .header {{
-            background: #e94560;
-            color: #fff;
-            padding: 20px 30px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }}
-        .shield {{
-            font-size: 36px;
-            line-height: 1;
-        }}
-        .header h1 {{
-            font-size: 20px;
-            font-weight: 600;
-        }}
-        .header p {{
-            font-size: 13px;
-            opacity: 0.9;
-            margin-top: 2px;
-        }}
-        .body {{
-            padding: 30px;
-        }}
-        .message {{
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 25px;
-            color: #b0b0b0;
-        }}
-        .details {{
-            background: #0f3460;
-            border-radius: 6px;
-            padding: 18px;
-            font-size: 13px;
-            line-height: 1.8;
-        }}
-        .details .row {{
-            display: flex;
-            gap: 10px;
-        }}
-        .details .label {{
-            color: #e94560;
-            font-weight: 600;
-            min-width: 120px;
-        }}
-        .details .value {{
-            color: #ccc;
-            word-break: break-all;
-        }}
-        .footer {{
-            padding: 15px 30px;
-            border-top: 1px solid #0f3460;
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="shield">&#128737;</div>
-            <div>
-                <h1>403 Forbidden &mdash; Request Blocked</h1>
-                <p>Web Application Firewall</p>
-            </div>
-        </div>
-        <div class="body">
-            <p class="message">
-                Your request has been blocked by the Web Application Firewall (WAF).
-                The request was classified as potentially malicious and has been denied
-                in accordance with the configured security policy.
-            </p>
-            <div class="details">
-                <div class="row"><span class="label">Client IP:</span><span class="value">{client_ip}</span></div>
-                <div class="row"><span class="label">Blocked URL:</span><span class="value">{blocked_url}</span></div>
-                <div class="row"><span class="label">Reason:</span><span class="value">{reason}</span></div>
-                <div class="row"><span class="label">Timestamp:</span><span class="value">{datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}Z</span></div>
-            </div>
-        </div>
-        <div class="footer">
-            VulApp WAF v3.2.1 &mdash; If you believe this is an error, contact your administrator with the Request ID.
-        </div>
-    </div>
-</body>
-</html>"""
-
-    response = make_response(html, 403)
-    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    response.headers['Server'] = 'cloudflare'
-    return response

@@ -1,0 +1,21 @@
+meta {
+  name: POST /api/v1/get-token-form
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/get-token-form
+  body: form-urlencoded
+  auth: none
+}
+
+body:form-urlencoded {
+  username: admin
+  password: easypassword
+}
+
+script:post-response {
+  var data = res.getBody();
+  bru.setVar("bearerToken", data.reply.token);
+}

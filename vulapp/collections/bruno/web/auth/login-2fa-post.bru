@@ -1,0 +1,17 @@
+meta {
+  name: POST /web/login-2fa
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/web/login-2fa
+  body: form-urlencoded
+  auth: none
+}
+
+body:form-urlencoded {
+  username: admin
+  password: easypassword
+  otp: {{otpCode}}
+}

@@ -1,0 +1,16 @@
+meta {
+  name: GET /api/v1/header-cookie
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/header-cookie
+  body: none
+  auth: none
+}
+
+headers {
+  secret-header: {{secretHeaderValue}}
+  Cookie: secret-cookie={{secretCookieValue}}
+}

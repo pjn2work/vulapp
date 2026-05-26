@@ -1,0 +1,11 @@
+meta {
+  name: GET /api/v1/users/:user_id
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users/{{user_id}}
+  body: none
+  auth: none
+}

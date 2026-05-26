@@ -1,0 +1,15 @@
+meta {
+  name: GET /web/welcome-cookie
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/web/welcome-cookie
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: secret-cookie={{secretCookieValue}}
+}

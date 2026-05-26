@@ -19,54 +19,52 @@ To perform your pentests, use the following known values:
 
 ## Endpoints and Requirements
 
-### Web Authentication Forms
-*   **`/web/login`**: Simple Login form. Vulnerable to **SQL Injection Bypass**.
-*   **`/web/login-2fa`**: Login form with TOTP. Requires User + Pass + OTP code.
-*   **`/web/logout`**: Clears the current session.
-*   **`/web/oauth2/login`**: OAuth2 flow landing page. Links to the authorization endpoint.
-*   **`/web/oauth2/authorize`**: OAuth2 authorization + consent screen. Vulnerable to **Open Redirect**, **No CSRF (state)**.
-*   **`/web/oauth2/callback`**: OAuth2 callback page with interactive token exchange.
-*   **`/web/oauth2/profile`**: OAuth2 protected profile. Vulnerable to **Token in Query String**.
+### Web Endpoints
 
-### Protected "Welcome" Pages
-These pages require specific authentication or headers to access. All `/web/welcome-` requests are logged to `welcome_requests.log` and the console.
+All `/web/welcome-*` requests are logged to the console.
 
-| Path | Requirement |
-| :--- | :--- |
-| `/web/welcome-basic-auth` | **Basic Auth** (`admin` / `easypassword`) |
-| `/web/welcome-simple` | **Session variable** `logged_in: True` (obtained via `/web/login`) |
-| `/web/welcome-2fa` | **Session variable** `2fa_logged_in: True` (obtained via `/web/login-2fa`) |
-| `/web/welcome-header` | **HTTP Header**: `secret-header: my-secret-header` |
-| `/web/welcome-cookie` | **Cookie**: `secret-cookie=my-secret-cookie` |
-
-### Vulnerable Tools
-*   **`/web/ping`**: Network utility. Vulnerable to **Command Injection** via the `host` query parameter.
-*   **`/web/users`**: User search page. Vulnerable to **SQL Injection** via the `search` query parameter.
-*   **`/web/guestbook`**: Visitor guestbook. Vulnerable to **Reflected XSS** via the `name` query parameter.
-*   **`/web/graphql`**: GraphQL query interface (HTML form). Vulnerable to **SQL Injection**, **Schema Introspection**, and exposes **password field**.
-
-### WAF Simulation
-*   **`/web/waf`**: Simulates a WAF block page (HTML). Returns 403 with WAF headers. Optional query params: `?reason=...&rule_id=...`
-*   **`/api/v1/waf`**: Simulates a WAF block response (JSON). Returns 403 with WAF headers. Optional query params: `?reason=...&rule_id=...`
+| Path | Method | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `/` | GET | None | Home / index page |
+| `/web/login` | GET, POST | None | Simple login form. **SQLi Bypass** |
+| `/web/welcome-simple` | GET | Session `logged_in: True` | Post-login welcome page. **Reflected XSS** |
+| `/web/login-2fa` | GET, POST | None | Login form with TOTP 2FA |
+| `/web/welcome-2fa` | GET | Session `2fa_logged_in: True` | Post-2FA welcome page. **Reflected XSS** |
+| `/web/welcome-basic-auth` | GET | Basic Auth (`admin` / `easypassword`) | Protected by HTTP Basic Auth |
+| `/web/welcome-header` | GET | Header `secret-header: my-secret-header` | Protected by secret header |
+| `/web/welcome-cookie` | GET | Cookie `secret-cookie=my-secret-cookie` | Protected by secret cookie |
+| `/web/logout` | GET | None | Clears the current session |
+| `/web/ping` | GET | None | Network utility. **Command Injection** via `host` param |
+| `/web/users` | GET | None | User search. **SQL Injection** via `search` param |
+| `/web/guestbook` | GET | None | Visitor guestbook. **Reflected XSS** via `name` param |
+| `/web/graphql` | GET | None | GraphQL query interface (HTML form) |
+| `/web/oauth2/login` | GET | None | OAuth2 flow landing page |
+| `/web/oauth2/authorize` | GET, POST | None | OAuth2 consent screen. **Open Redirect**, **No CSRF** |
+| `/web/oauth2/callback` | GET | None | OAuth2 callback with interactive token exchange |
+| `/web/oauth2/profile` | GET | Bearer Token | OAuth2 protected profile. **Token in Query String** |
 
 ### API Endpoints
-*   **`/swagger-ui`**: Interactive Swagger documentation for the API.
-*   **`/openapi.json`**: Raw OpenAPI specification.
-*   **`/api/tools/echo`**: Echos back all request data (headers, params, body, cookies, session) in JSON format.
-*   **`/api/tools/otp`**: TOTP utility.
-    *   **Usage:** `GET` (query params) or `POST` (form data) with `seed_b32` or `seed_hex` parameter.
-    *   **Returns:** JSON containing current code, time remaining, and the seed.
-*   **`/api/v1/header-cookie`**: API protected by both a secret header and a secret cookie.
-*   **`/api/v1/header-cookie-auth`**: API protected by Basic Auth, a secret header, and a secret cookie.
-*   **`/api/v1/users/<user_id>`**: API version of the user search tool. Vulnerable to **SQL Injection**.
-*   **`/api/v1/get-token`**: Authenticates with JSON payload and returns a Bearer token.
-*   **`/api/v1/get-token-form`**: Authenticates with Form data and returns a Bearer token.
-*   **`/api/v1/is-valid-token`**: Validates the Bearer token in the `token` header.
-*   **`/api/v1/graphql`**: GraphQL API endpoint (JSON). Vulnerable to **SQL Injection**, **Introspection**, exposes **password field**.
-*   **`/api/v1/graphql/schema`**: GraphQL schema introspection (returns JSON).
-*   **`/api/v1/oauth2/token`**: OAuth2 token endpoint. Supports `authorization_code` and `client_credentials` grants. Vulnerable to **missing client_secret validation** (auth code grant), **auth code replay**, **unrestricted scopes** (client credentials).
-*   **`/api/v1/oauth2/userinfo`**: OAuth2 protected user profile (requires Bearer token).
-*   **`/api/v1/waf`**: WAF block simulation (JSON). Accepts GET/POST. Returns 403 with WAF response headers (`X-WAF-Block`, `X-WAF-Rule-ID`, `X-WAF-Reason`, `X-WAF-Request-ID`, `X-WAF-Engine`).
+
+All `/api/v1/*` requests are logged to the console.
+
+| Path | Method | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `/swagger-ui` | GET | None | Interactive Swagger documentation |
+| `/openapi.json` | GET | None | Raw OpenAPI specification |
+| `/web/download/postman_collection.json` | GET | None | Download Postman collection |
+| `/web/download-bruno-collection` | GET | None | Download Bruno collection (zip) |
+| `/api/tools/echo` | GET, POST, PUT, DELETE, PATCH | None | Echoes all request data (headers, params, body, cookies, session) |
+| `/api/tools/otp` | GET, POST | None | TOTP code generator. Params: `seed_b32` or `seed_hex` |
+| `/api/v1/get-token` | POST | Credentials (JSON body) | Returns Bearer token |
+| `/api/v1/get-token-form` | POST | Credentials (form data) | Returns Bearer token |
+| `/api/v1/is-valid-token` | GET, POST | Bearer Token | Validates Bearer token |
+| `/api/v1/header-cookie` | GET | Secret Header + Cookie | Protected by header and cookie |
+| `/api/v1/header-cookie-auth` | GET | Basic Auth + Secret Header + Cookie | Protected by Basic Auth, header, and cookie |
+| `/api/v1/users/<user_id>` | GET | None | User lookup by ID. **SQL Injection** |
+| `/api/v1/graphql` | POST | Secret Header | GraphQL API. **SQLi**, **Introspection**, exposes password field |
+| `/api/v1/graphql/schema` | GET | None | GraphQL schema via introspection |
+| `/api/v1/oauth2/token` | POST | Client credentials | OAuth2 token endpoint (`authorization_code` + `client_credentials`) |
+| `/api/v1/oauth2/userinfo` | GET | Bearer Token | OAuth2 user profile |
 
 ---
 

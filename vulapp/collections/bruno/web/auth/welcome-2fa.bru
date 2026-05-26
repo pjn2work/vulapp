@@ -1,0 +1,15 @@
+meta {
+  name: GET /web/welcome-2fa
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/web/welcome-2fa
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: session={{sessionCookie}}
+}

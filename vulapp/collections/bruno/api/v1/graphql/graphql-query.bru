@@ -1,0 +1,32 @@
+meta {
+  name: POST /api/v1/graphql
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/graphql
+  body: graphql
+  auth: none
+}
+
+headers {
+  secret-header: {{secretHeaderValue}}
+}
+
+body:graphql {
+  {
+    users {
+      id
+      username
+      email
+      password
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "search": ""
+  }
+}

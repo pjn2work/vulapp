@@ -1,0 +1,16 @@
+meta {
+  name: GET /web/welcome-basic-auth
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/web/welcome-basic-auth
+  body: none
+  auth: basic
+}
+
+auth:basic {
+  username: admin
+  password: easypassword
+}
