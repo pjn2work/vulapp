@@ -52,7 +52,7 @@ All `/api/v1/*` requests are logged to the console.
 | `/swagger-ui` | GET | None | Interactive Swagger documentation |
 | `/openapi.json` | GET | None | Raw OpenAPI specification |
 | `/web/download/postman_collection.json` | GET | None | Download Postman collection |
-| `/web/download-bruno-collection` | GET | None | Download Bruno collection (zip) |
+| `/web/download/bruno_collection.zip` | GET | None | Download Bruno collection (zip) |
 | `/api/tools/echo` | GET, POST, PUT, DELETE, PATCH | None | Echoes all request data (headers, params, body, cookies, session) |
 | `/api/tools/otp` | GET, POST | None | TOTP code generator. Params: `seed_b32` or `seed_hex` |
 | `/api/v1/get-token` | POST | Credentials (JSON body) | Returns Bearer token |

@@ -395,7 +395,7 @@ def serve_txt_file(filename):
     return send_from_directory(str(UPLOAD_FOLDER), f"{filename}.txt")
 
 
-@web_bp.route('/web/download-bruno-collection')
+@web_bp.route('/web/download/bruno_collection.zip')
 def download_bruno_collection():
     """Download Bruno API collection as a zip file."""
     import zipfile
