@@ -1,0 +1,30 @@
+info:
+  name: POST /api/v1/oauth2/token (authorization_code)
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/oauth2/token"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "grant_type": "authorization_code",
+        "code": "{{oauthAuthCode}}",
+        "client_id": "vulapp-client-001",
+        "client_secret": "super-secret-client-secret",
+        "redirect_uri": "http://localhost:5000/web/oauth2/callback"
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("oauthToken", res.body.access_token);
+
+settings:
+  encodeUrl: true

@@ -1,0 +1,14 @@
+info:
+  name: GET /web/welcome-2fa
+  type: http
+  seq: 7
+
+http:
+  method: GET
+  url: "{{baseUrl}}/web/welcome-2fa"
+  headers:
+    - name: Cookie
+      value: "session={{sessionCookie}}"
+
+settings:
+  encodeUrl: true

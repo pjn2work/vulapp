@@ -395,27 +395,31 @@ def serve_txt_file(filename):
     return send_from_directory(str(UPLOAD_FOLDER), f"{filename}.txt")
 
 
-@web_bp.route('/web/download/bruno_collection.zip')
-def download_bruno_collection():
-    """Download Bruno API collection as a zip file."""
+def _zip_bruno_collection(folder_name, download_name):
     import zipfile
     import io
     from flask import send_file, current_app
-
-    bruno_path = Path(current_app.root_path) / 'collections' / 'bruno'
+    bruno_path = Path(current_app.root_path) / 'collections' / folder_name
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
         for file_path in sorted(bruno_path.rglob('*')):
             if file_path.is_file():
-                arcname = Path('vulapp-bruno-collection') / file_path.relative_to(bruno_path)
+                arcname = Path(download_name) / file_path.relative_to(bruno_path)
                 zf.write(file_path, arcname)
     zip_buffer.seek(0)
-    return send_file(
-        zip_buffer,
-        mimetype='application/zip',
-        as_attachment=True,
-        download_name='vulapp-bruno-collection.zip'
-    )
+    return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name=f'{download_name}.zip')
+
+
+@web_bp.route('/web/download/bruno_collection_v2.zip')
+def download_bruno_collection_v2():
+    """Download Bruno v2 collection (.bru files) as a zip file."""
+    return _zip_bruno_collection('bruno-v2', 'vulapp-bruno-collection-v2')
+
+
+@web_bp.route('/web/download/bruno_collection_v3.zip')
+def download_bruno_collection_v3():
+    """Download Bruno v3 collection (.yml files) as a zip file."""
+    return _zip_bruno_collection('bruno-v3', 'vulapp-bruno-collection-v3')
 
 
 @web_bp.route('/web/delete/<filename>', methods=['DELETE'])

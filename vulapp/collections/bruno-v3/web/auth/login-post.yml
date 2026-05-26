@@ -1,0 +1,18 @@
+info:
+  name: POST /web/login
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/web/login"
+  body:
+    type: form-urlencoded
+    data:
+      - name: username
+        value: admin
+      - name: password
+        value: easypassword
+
+settings:
+  encodeUrl: true

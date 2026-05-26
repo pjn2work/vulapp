@@ -1,0 +1,20 @@
+info:
+  name: POST /api/tools/echo
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/tools/echo"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "message": "hello"
+      }
+
+settings:
+  encodeUrl: true

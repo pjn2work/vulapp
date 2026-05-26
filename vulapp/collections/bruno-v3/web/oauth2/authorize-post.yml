@@ -1,0 +1,28 @@
+info:
+  name: POST /web/oauth2/authorize
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/web/oauth2/authorize"
+  body:
+    type: form-urlencoded
+    data:
+      - name: username
+        value: admin
+      - name: password
+        value: easypassword
+      - name: action
+        value: approve
+      - name: client_id
+        value: vulapp-client-001
+      - name: redirect_uri
+        value: http://localhost:5000/web/oauth2/callback
+      - name: scope
+        value: read profile
+      - name: state
+        value: randomstate123
+
+settings:
+  encodeUrl: true

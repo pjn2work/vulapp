@@ -1,0 +1,11 @@
+info:
+  name: GET /web/login-2fa
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{baseUrl}}/web/login-2fa"
+
+settings:
+  encodeUrl: true

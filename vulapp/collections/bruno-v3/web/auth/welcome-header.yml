@@ -1,0 +1,14 @@
+info:
+  name: GET /web/welcome-header
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: "{{baseUrl}}/web/welcome-header"
+  headers:
+    - name: secret-header
+      value: "{{secretHeaderValue}}"
+
+settings:
+  encodeUrl: true

@@ -1,0 +1,19 @@
+info:
+  name: POST /api/tools/otp
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/tools/otp"
+  body:
+    type: form-urlencoded
+    data:
+      - name: seed_b32
+        value: XVQ2UIGO75XRUKJO
+      - name: seed_hex
+        value: ""
+        enabled: false
+
+settings:
+  encodeUrl: true

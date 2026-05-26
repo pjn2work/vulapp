@@ -1,0 +1,14 @@
+info:
+  name: GET /web/welcome-simple
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{baseUrl}}/web/welcome-simple"
+  headers:
+    - name: Cookie
+      value: "session={{sessionCookie}}"
+
+settings:
+  encodeUrl: true

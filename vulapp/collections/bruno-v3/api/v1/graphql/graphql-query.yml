@@ -1,0 +1,25 @@
+info:
+  name: POST /api/v1/graphql
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/graphql"
+  headers:
+    - name: secret-header
+      value: "{{secretHeaderValue}}"
+  body:
+    type: graphql
+    data: |-
+      {
+        users {
+          id
+          username
+          email
+          password
+        }
+      }
+
+settings:
+  encodeUrl: true

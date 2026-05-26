@@ -1,0 +1,3 @@
+version: "1"
+name: VulApp - Vulnerable Flask API
+type: collection

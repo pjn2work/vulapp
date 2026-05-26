@@ -1,0 +1,20 @@
+info:
+  name: POST /web/login-2fa
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{baseUrl}}/web/login-2fa"
+  body:
+    type: form-urlencoded
+    data:
+      - name: username
+        value: admin
+      - name: password
+        value: easypassword
+      - name: otp
+        value: "{{otpCode}}"
+
+settings:
+  encodeUrl: true
