@@ -1,7 +1,7 @@
-name: local
+name: VulWeb Environment
 variables:
   - name: baseUrl
-    value: http://localhost:5000
+    value: https://vulweb.pjn.ddns.net
     type: text
     enabled: true
   - name: bearerToken

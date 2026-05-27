@@ -1,0 +1,42 @@
+name: VulAPI HTTP Environment
+variables:
+  - name: baseUrl
+    value: http://vulapi.pjn.ddns.net
+    type: text
+    enabled: true
+  - name: bearerToken
+    value: ""
+    type: text
+    enabled: true
+  - name: oauthToken
+    value: ""
+    type: text
+    enabled: true
+  - name: oauthAuthCode
+    value: ""
+    type: text
+    enabled: true
+  - name: user_id
+    value: "1"
+    type: text
+    enabled: true
+  - name: secretHeaderValue
+    value: my-secret-header
+    type: text
+    enabled: true
+  - name: secretCookieValue
+    value: my-secret-cookie
+    type: text
+    enabled: true
+  - name: sessionCookie
+    value: ""
+    type: text
+    enabled: true
+  - name: otpCode
+    value: ""
+    type: text
+    enabled: true
+  - name: filename
+    value: example.txt
+    type: text
+    enabled: true
