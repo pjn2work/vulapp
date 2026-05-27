@@ -26,3 +26,16 @@ http:
 
 settings:
   encodeUrl: true
+  followRedirects: false
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        let location = res.headers['location'];
+        if (location) {
+          let match = location.match(/[?&]code=([^&]+)/);
+          if (match) {
+            bru.setVar("oauthAuthCode", match[1]);
+          }
+        }

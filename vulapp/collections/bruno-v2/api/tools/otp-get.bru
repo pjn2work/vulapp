@@ -14,3 +14,8 @@ params:query {
   seed_b32: XVQ2UIGO75XRUKJO
   ~seed_hex:
 }
+
+script:post-response {
+  var data = res.getBody();
+  bru.setVar("otpCode", data.code);
+}

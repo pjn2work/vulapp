@@ -16,3 +16,19 @@ http:
 
 settings:
   encodeUrl: true
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        let setCookieHeaders = res.headers['set-cookie'];
+        if (setCookieHeaders) {
+          let headers = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
+          for (let header of headers) {
+            let match = header.match(/session=([^;]+)/);
+            if (match) {
+              bru.setVar("sessionCookie", match[1]);
+              break;
+            }
+          }
+        }

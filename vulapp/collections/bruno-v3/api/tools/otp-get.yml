@@ -17,3 +17,9 @@ http:
 
 settings:
   encodeUrl: true
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("otpCode", res.body.code);

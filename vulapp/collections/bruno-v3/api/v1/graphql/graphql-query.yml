@@ -20,6 +20,10 @@ http:
           password
         }
       }
+    variables: |-
+      {
+        "search": ""
+      }
 
 settings:
   encodeUrl: true

@@ -19,3 +19,17 @@ body:form-urlencoded {
   scope: read profile
   state: randomstate123
 }
+
+settings {
+  followRedirects: false
+}
+
+script:post-response {
+  let location = res.headers['location'];
+  if (location) {
+    let match = location.match(/[?&]code=([^&]+)/);
+    if (match) {
+      bru.setVar("oauthAuthCode", match[1]);
+    }
+  }
+}
