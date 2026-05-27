@@ -426,7 +426,7 @@ def download_bruno_collection_v3():
 @web_bp.route('/web/download/bruno_collection_v3_flat.zip')
 def download_bruno_collection_v3_flat():
     """Download Bruno v3 collection (.yml files) as a zip file without root folder."""
-    return _zip_bruno_collection('bruno-v3', 'vulapp-bruno-collection-v3', flat=True)
+    return _zip_bruno_collection('bruno-v3', 'vulapp-bruno-collection-v3-flat', flat=True)
 
 
 @web_bp.route('/web/delete/<filename>', methods=['DELETE'])
