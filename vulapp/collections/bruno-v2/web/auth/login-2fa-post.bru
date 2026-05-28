@@ -16,6 +16,12 @@ body:form-urlencoded {
   otp: {{otpCode}}
 }
 
+script:pre-request {
+  const res = await fetch(`${bru.getEnvVar("baseUrl")}/api/tools/otp?seed_b32=${bru.getEnvVar("totpSeed")}`);
+  const data = await res.json();
+  bru.setVar("otpCode", data.code);
+}
+
 script:post-response {
   let setCookieHeaders = res.headers['set-cookie'];
   if (setCookieHeaders) {
