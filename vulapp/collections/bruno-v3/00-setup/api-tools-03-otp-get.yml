@@ -10,10 +10,6 @@ http:
     - name: seed_b32
       value: "{{totpSeed}}"
       type: query
-    - name: seed_hex
-      value: ""
-      type: query
-      enabled: false
 
 settings:
   encodeUrl: true

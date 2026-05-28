@@ -23,9 +23,8 @@ runtime:
   scripts:
     - type: before-request
       code: |-
-        const res = await fetch(`${bru.getEnvVar("baseUrl")}/api/tools/otp?seed_b32=${bru.getEnvVar("totpSeed")}`);
-        const data = await res.json();
-        bru.setVar("otpCode", data.otp_code);
+        const res = await axios.get(`${bru.getEnvVar("baseUrl")}/api/tools/otp?seed_b32=${bru.getEnvVar("totpSeed")}`);
+        bru.setVar("otpCode", res.data.otp_code);
     - type: after-response
       code: |-
         let setCookieHeaders = res.headers['set-cookie'];

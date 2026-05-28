@@ -11,9 +11,6 @@ http:
     data:
       - name: seed_b32
         value: "{{totpSeed}}"
-      - name: seed_hex
-        value: ""
-        enabled: false
 
 settings:
   encodeUrl: true
