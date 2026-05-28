@@ -10,7 +10,7 @@ http:
     type: form-urlencoded
     data:
       - name: seed_b32
-        value: XVQ2UIGO75XRUKJO
+        value: "{{totpSeed}}"
       - name: seed_hex
         value: ""
         enabled: false
@@ -22,4 +22,4 @@ runtime:
   scripts:
     - type: after-response
       code: |-
-        bru.setVar("otpCode", res.body.code);
+        bru.setVar("otpCode", res.body.otp_code);

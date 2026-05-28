@@ -25,7 +25,7 @@ runtime:
       code: |-
         const res = await fetch(`${bru.getEnvVar("baseUrl")}/api/tools/otp?seed_b32=${bru.getEnvVar("totpSeed")}`);
         const data = await res.json();
-        bru.setVar("otpCode", data.code);
+        bru.setVar("otpCode", data.otp_code);
     - type: after-response
       code: |-
         let setCookieHeaders = res.headers['set-cookie'];

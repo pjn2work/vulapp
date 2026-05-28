@@ -22,4 +22,4 @@ runtime:
   scripts:
     - type: after-response
       code: |-
-        bru.setVar("otpCode", res.body.code);
+        bru.setVar("otpCode", res.body.otp_code);
