@@ -1,0 +1,25 @@
+info:
+  name: GET /api/tools/otp
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/tools/otp"
+  params:
+    - name: seed_b32
+      value: "{{totpSeed}}"
+      type: query
+    - name: seed_hex
+      value: ""
+      type: query
+      enabled: false
+
+settings:
+  encodeUrl: true
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("otpCode", res.body.code);

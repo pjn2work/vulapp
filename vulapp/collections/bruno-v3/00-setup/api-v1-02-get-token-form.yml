@@ -1,0 +1,24 @@
+info:
+  name: POST /api/v1/get-token-form
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/get-token-form"
+  body:
+    type: form-urlencoded
+    data:
+      - name: username
+        value: admin
+      - name: password
+        value: easypassword
+
+settings:
+  encodeUrl: true
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("bearerToken", res.body.reply.token);

@@ -1,0 +1,21 @@
+meta {
+  name: GET /api/tools/otp
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/tools/otp
+  body: none
+  auth: none
+}
+
+params:query {
+  seed_b32: {{totpSeed}}
+  ~seed_hex:
+}
+
+script:post-response {
+  var data = res.getBody();
+  bru.setVar("otpCode", data.code);
+}

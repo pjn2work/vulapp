@@ -1,0 +1,35 @@
+meta {
+  name: POST /web/oauth2/authorize
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/web/oauth2/authorize
+  body: form-urlencoded
+  auth: none
+}
+
+body:form-urlencoded {
+  username: admin
+  password: easypassword
+  action: approve
+  client_id: vulapp-client-001
+  redirect_uri: {{baseUrl}}/web/oauth2/callback
+  scope: read profile
+  state: randomstate123
+}
+
+settings {
+  followRedirects: false
+}
+
+script:post-response {
+  let location = res.headers['location'];
+  if (location) {
+    let match = location.match(/[?&]code=([^&]+)/);
+    if (match) {
+      bru.setVar("oauthAuthCode", match[1]);
+    }
+  }
+}
