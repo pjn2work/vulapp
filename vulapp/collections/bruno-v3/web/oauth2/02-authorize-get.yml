@@ -11,7 +11,7 @@ http:
       value: vulapp-client-001
       type: query
     - name: redirect_uri
-      value: http://localhost:5000/web/oauth2/callback
+      value: "{{baseUrl}}/web/oauth2/callback"
       type: query
     - name: response_type
       value: code

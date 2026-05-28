@@ -12,7 +12,7 @@ get {
 
 params:query {
   client_id: vulapp-client-001
-  redirect_uri: http://localhost:5000/web/oauth2/callback
+  redirect_uri: {{baseUrl}}/web/oauth2/callback
   response_type: code
   scope: read profile
   state: randomstate123

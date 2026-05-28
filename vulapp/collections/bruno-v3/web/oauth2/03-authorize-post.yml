@@ -18,7 +18,7 @@ http:
       - name: client_id
         value: vulapp-client-001
       - name: redirect_uri
-        value: http://localhost:5000/web/oauth2/callback
+        value: "{{baseUrl}}/web/oauth2/callback"
       - name: scope
         value: read profile
       - name: state
