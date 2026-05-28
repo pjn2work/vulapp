@@ -36,6 +36,10 @@ variables:
     value: ""
     type: text
     enabled: true
+  - name: totpSeed
+    value: XVQ2UIGO75XRUKJO
+    type: text
+    enabled: true
   - name: filename
     value: example.txt
     type: text

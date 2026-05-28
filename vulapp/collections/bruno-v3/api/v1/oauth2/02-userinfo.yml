@@ -1,11 +1,11 @@
 info:
-  name: GET /web/oauth2/profile
+  name: GET /api/v1/oauth2/userinfo
   type: http
-  seq: 5
+  seq: 2
 
 http:
   method: GET
-  url: "{{baseUrl}}/web/oauth2/profile"
+  url: "{{baseUrl}}/api/v1/oauth2/userinfo"
   auth:
     type: bearer
     token: "{{oauthToken}}"

@@ -8,7 +8,7 @@ http:
   url: "{{baseUrl}}/api/tools/otp"
   params:
     - name: seed_b32
-      value: XVQ2UIGO75XRUKJO
+      value: "{{totpSeed}}"
       type: query
     - name: seed_hex
       value: ""
