@@ -44,3 +44,7 @@ variables:
     value: example.txt
     type: text
     enabled: true
+  - name: env3
+    value: VulWeb
+    type: text
+    enabled: true

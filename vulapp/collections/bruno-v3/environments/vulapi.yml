@@ -44,3 +44,7 @@ variables:
     value: example.txt
     type: text
     enabled: true
+  - name: env2
+    value: VulAPI HTTP
+    type: text
+    enabled: true
