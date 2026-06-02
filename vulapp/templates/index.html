@@ -1119,6 +1119,18 @@ curl http://localhost:5000/api/v1/oauth2/userinfo \
                             <td>Bearer Token</td>
                             <td>OAuth2 user profile</td>
                         </tr>
+                        <tr>
+                            <td>/api/v1/mle/</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>MLE &mdash; returns static info encrypted as a JWE token (RSA-OAEP + A256GCM)</td>
+                        </tr>
+                        <tr>
+                            <td>/api/v1/mle/</td>
+                            <td>POST</td>
+                            <td>None</td>
+                            <td>MLE &mdash; decrypts the incoming JWE token and returns an encrypted echo response</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

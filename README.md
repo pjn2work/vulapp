@@ -66,6 +66,8 @@ All `/api/v1/*` requests are logged to the console.
 | `/api/v1/graphql/schema` | GET | None | GraphQL schema via introspection |
 | `/api/v1/oauth2/token` | POST | Client credentials | OAuth2 token endpoint (`authorization_code` + `client_credentials`) |
 | `/api/v1/oauth2/userinfo` | GET | Bearer Token | OAuth2 user profile |
+| `/api/v1/mle/` | GET | None | MLE — returns static info encrypted as a JWE token (RSA-OAEP + A256GCM) |
+| `/api/v1/mle/` | POST | None | MLE — decrypts the incoming JWE token and returns an encrypted echo response |
 
 ---
 
@@ -359,6 +361,83 @@ This GraphQL endpoint contains the following intentional vulnerabilities:
 5. **No Query Complexity Analysis** - Allows expensive queries
 6. **No Rate Limiting** - Unlimited query execution
 7. **No Authentication** - GraphQL endpoint is publicly accessible
+
+---
+
+## MLE Testing Guide
+
+### Overview
+
+VulApp implements Message Level Encryption (MLE) using JWE (JSON Web Encryption) with **RSA-OAEP** for key transport and **AES-256-GCM** for payload encryption. Both endpoints are under `/api/v1/mle/`.
+
+The JWE header looks like:
+```json
+{"alg": "RSA-OAEP", "enc": "A256GCM", "kid": "mle-key-001", "cty": "application/json"}
+```
+
+### Keys
+
+The RSA key pair is stored in the `uploads/` folder:
+- `uploads/mle-key-001_public.pem` — public key (encrypt)
+- `uploads/mle-key-001_private.pem` — private key (decrypt)
+
+### GET /api/v1/mle/ — Encrypted Response
+
+```bash
+curl http://localhost:5000/api/v1/mle/
+```
+
+**Response:**
+```json
+{"token": "<JWE compact token>"}
+```
+
+Decrypt the token with the private key to reveal:
+```json
+{
+  "message": "Hello from MLE!",
+  "server": "vulapp",
+  "user": "admin",
+  "info": "This response is encrypted with RSA-OAEP + A256GCM"
+}
+```
+
+### POST /api/v1/mle/ — Encrypted Request + Response
+
+Encrypt your JSON payload with the public key (`uploads/mle-key-001_public.pem`) and send it as a JWE compact token:
+
+```bash
+curl -X POST http://localhost:5000/api/v1/mle/ \
+  -H "Content-Type: application/json" \
+  -d '{"token": "<JWE compact token>"}'
+```
+
+**Response:**
+```json
+{"token": "<JWE compact token>"}
+```
+
+Decrypt the response token with the private key to reveal the echo of your original payload plus a confirmation message.
+
+### Generating a JWE Token (Python)
+
+```python
+from jose import jwe
+import json
+
+public_key = open("uploads/mle-key-001_public.pem").read()
+payload = {"hello": "world"}
+
+token = jwe.encrypt(
+    json.dumps(payload).encode(),
+    public_key,
+    algorithm="RSA-OAEP",
+    encryption="A256GCM",
+    cty="application/json",
+    kid="mle-key-001",
+)
+print(token.decode())
+```
 
 ---
 

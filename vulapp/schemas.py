@@ -34,3 +34,11 @@ class TokenReplySchema(ma.Schema):
 
 class GetTokenResponseSchema(ma.Schema):
     reply = ma.fields.Nested(TokenReplySchema)
+
+
+class MLERequestSchema(ma.Schema):
+    token = ma.fields.String(required=True, metadata={"description": "JWE compact token (RSA-OAEP + A256GCM) containing the encrypted JSON payload"})
+
+
+class MLEResponseSchema(ma.Schema):
+    token = ma.fields.String(metadata={"description": "JWE compact token containing the encrypted JSON response"})

@@ -11,9 +11,10 @@ from vulapp.config import (
 )
 from vulapp.schemas import (
     OtpArgsSchema, OtpResponseSchema, UserSearchArgsSchema,
-    GetTokenArgsSchema, GetTokenResponseSchema, AuthSchema
+    GetTokenArgsSchema, GetTokenResponseSchema, AuthSchema,
+    MLERequestSchema, MLEResponseSchema
 )
-from vulapp.utils import get_otp, get_echo
+from vulapp.utils import get_otp, get_echo, jwe_encrypt, jwe_decrypt
 
 
 api_blp = Blueprint("api", "api", url_prefix="/api", description="Operations on API")
@@ -336,6 +337,35 @@ def oauth2_token():
 
     return {"error": "unsupported_grant_type",
             "error_description": "Supported grant types: authorization_code, client_credentials"}, 400
+
+
+# MLE Endpoints - Message Level Encryption (RSA-OAEP + A256GCM)
+@api_blp.route('/v1/mle/')
+class MLE(MethodView):
+    @api_blp.response(200, MLEResponseSchema)
+    def get(self):
+        """Return static server info encrypted as a JWE token."""
+        payload = {
+            "message": "Hello from MLE!",
+            "server": "vulapp",
+            "user": "admin",
+            "info": "This response is encrypted with RSA-OAEP + A256GCM",
+        }
+        return {"token": jwe_encrypt(payload)}
+
+    @api_blp.arguments(MLERequestSchema, location="json")
+    @api_blp.response(200, MLEResponseSchema)
+    def post(self, args):
+        """Decrypt the incoming JWE token and return an encrypted echo response."""
+        try:
+            decrypted = jwe_decrypt(args["token"])
+        except Exception as err:
+            return {"message": f"JWE decryption failed: {err}"}, 400
+        response_payload = {
+            "echo": decrypted,
+            "message": "Payload successfully decrypted and re-encrypted by the server",
+        }
+        return {"token": jwe_encrypt(response_payload)}
 
 
 @api_blp.route('/v1/oauth2/userinfo', methods=['GET'])

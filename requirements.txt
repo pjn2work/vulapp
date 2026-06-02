@@ -6,3 +6,4 @@ marshmallow
 pyyaml
 graphene
 graphql-core
+python-jose[cryptography]

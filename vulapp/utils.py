@@ -5,6 +5,8 @@ import json
 from datetime import datetime
 from time import sleep
 from flask import request, session
+from jose import jwe
+from vulapp.config import MLE_KID, MLE_PUBLIC_KEY, MLE_PRIVATE_KEY
 
 
 def get_otp(seed_b32: str = "", seed_hex: str = "") -> dict:
@@ -76,6 +78,26 @@ def get_echo() -> dict:
             "password": auth.password,
         }
     return echo_data
+
+
+def jwe_encrypt(payload: dict) -> str:
+    """Encrypt a dict payload as a JWE compact token using RSA-OAEP + A256GCM."""
+    plaintext = json.dumps(payload).encode()
+    token = jwe.encrypt(
+        plaintext,
+        MLE_PUBLIC_KEY,
+        algorithm="RSA-OAEP",
+        encryption="A256GCM",
+        cty="application/json",
+        kid=MLE_KID,
+    )
+    return token.decode() if isinstance(token, bytes) else token
+
+
+def jwe_decrypt(token: str) -> dict:
+    """Decrypt a JWE compact token and return the payload as a dict."""
+    plaintext = jwe.decrypt(token, MLE_PRIVATE_KEY)
+    return json.loads(plaintext)
 
 
 def dict2str(d: dict) -> str:

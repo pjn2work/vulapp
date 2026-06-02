@@ -22,6 +22,11 @@ OAUTH2_CLIENT_SECRET = "super-secret-client-secret"
 OAUTH2_AUTH_CODES = {}  # In-memory store: {code: {client_id, redirect_uri, username, expires}}
 OAUTH2_TOKENS = {}  # In-memory store: {token: {client_id, username, scope, expires}}
 
+# MLE (Message Level Encryption) - RSA-OAEP + A256GCM
+MLE_KID = "mle-key-001"
+MLE_PUBLIC_KEY = open(f"uploads/{MLE_KID}_public.pem").read()
+MLE_PRIVATE_KEY = open(f"uploads/{MLE_KID}_private.pem").read()
+
 # Flask configuration
 FLASK_CONFIG = {
     "SECRET_KEY": 'super-secret-key-for-sessions',
