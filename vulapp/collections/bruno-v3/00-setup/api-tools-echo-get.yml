@@ -1,4 +1,4 @@
-why info:
+info:
   name: GET /api/tools/echo
   type: http
   seq: 1
