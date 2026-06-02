@@ -222,3 +222,6 @@ uploads/
 !uploads/postman_collection.json
 pentest_target.db
 upload_tracker.json
+
+# Added by ggshield
+.cache_ggshield
