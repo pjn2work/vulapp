@@ -51,9 +51,10 @@ All `/api/v1/*` requests are logged to the console.
 | :--- | :--- | :--- | :--- |
 | `/swagger-ui` | GET | None | Interactive Swagger documentation |
 | `/openapi.json` | GET | None | Raw OpenAPI specification |
-| `/web/download/postman_collection.json` | GET | None | Download Postman collection |
-| `/web/download/bruno_collection_v2.zip` | GET | None | Download Bruno v2 collection (.bru files, zip) |
-| `/web/download/bruno_collection_v3.zip` | GET | None | Download Bruno v3 collection (.yml files, zip) |
+| `/web/download/collection_postman.json` | GET | None | Download Postman collection (v2.1.0, includes web + API + MLE) |
+| `/web/download/collection_bruno_v2.zip` | GET | None | Download Bruno v2 collection (.bru files, zip) |
+| `/web/download/collection_bruno_v3.zip` | GET | None | Download Bruno v3 collection (.yml files, zip) |
+| `/web/download/collection_bruno_v3_flat.zip` | GET | None | Download Bruno v3 collection (.yml files, zip, no root folder) |
 | `/api/tools/echo` | GET, POST, PUT, DELETE, PATCH | None | Echoes all request data (headers, params, body, cookies, session) |
 | `/api/tools/otp` | GET, POST | None | TOTP code generator. Params: `seed_b32` or `seed_hex` |
 | `/api/tools/logs` | GET | None | Last N lines of the request log (plain text). Param: `lines` (default: 1000) |

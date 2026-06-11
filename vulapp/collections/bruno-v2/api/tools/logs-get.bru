@@ -1,0 +1,15 @@
+meta {
+  name: GET /api/tools/logs
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/tools/logs?lines=1000
+  body: none
+  auth: none
+}
+
+params:query {
+  lines: 1000
+}

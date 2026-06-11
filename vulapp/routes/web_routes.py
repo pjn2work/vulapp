@@ -411,22 +411,32 @@ def _zip_bruno_collection(folder_name, download_name, flat=False):
     return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name=f'{download_name}.zip')
 
 
-@web_bp.route('/web/download/bruno_collection_v2.zip')
-def download_bruno_collection_v2():
+@web_bp.route('/web/download/collection_bruno_v2.zip')
+def download_collection_bruno_v2():
     """Download Bruno v2 collection (.bru files) as a zip file."""
-    return _zip_bruno_collection('bruno-v2', 'vulapp-bruno-collection-v2')
+    return _zip_bruno_collection('bruno-v2', 'collection_bruno_v2')
 
 
-@web_bp.route('/web/download/bruno_collection_v3.zip')
-def download_bruno_collection_v3():
+@web_bp.route('/web/download/collection_bruno_v3.zip')
+def download_collection_bruno_v3():
     """Download Bruno v3 collection (.yml files) as a zip file."""
-    return _zip_bruno_collection('bruno-v3', 'vulapp-bruno-collection-v3')
+    return _zip_bruno_collection('bruno-v3', 'collection_bruno_v3')
 
 
-@web_bp.route('/web/download/bruno_collection_v3_flat.zip')
-def download_bruno_collection_v3_flat():
+@web_bp.route('/web/download/collection_bruno_v3_flat.zip')
+def download_collection_bruno_v3_flat():
     """Download Bruno v3 collection (.yml files) as a zip file without root folder."""
-    return _zip_bruno_collection('bruno-v3', 'vulapp-bruno-collection-v3-flat', flat=True)
+    return _zip_bruno_collection('bruno-v3', 'collection_bruno_v3_flat', flat=True)
+
+
+@web_bp.route('/web/download/collection_postman.json')
+def download_collection_postman():
+    """Download the Postman collection JSON."""
+    from flask import current_app
+    collections_dir = Path(current_app.root_path) / 'collections' / 'postman'
+    return send_from_directory(str(collections_dir), 'collection.json',
+                               as_attachment=True,
+                               download_name='collection_postman.json')
 
 
 @web_bp.route('/web/delete/<filename>', methods=['DELETE'])

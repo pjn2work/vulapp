@@ -1,0 +1,849 @@
+{
+    "info": {
+        "_postman_id": "d4e5f6a7-b8c9-0123-defa-456789012345",
+        "name": "VulApp - Vulnerable Flask API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "api",
+            "item": [
+                {
+                    "name": "tools",
+                    "item": [
+                        {
+                            "name": "GET /api/tools/echo",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/tools/echo",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "tools", "echo"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "POST /api/tools/echo",
+                            "request": {
+                                "method": "POST",
+                                "header": [{"key": "Content-Type", "value": "application/json"}],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"message\": \"hello\"\n}",
+                                    "options": {"raw": {"headerFamily": "json", "language": "json"}}
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/tools/echo",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "tools", "echo"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /api/tools/otp",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/tools/otp?seed_b32={{totpSeed}}",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "tools", "otp"],
+                                    "query": [
+                                        {"key": "seed_b32", "value": "{{totpSeed}}"},
+                                        {"key": "seed_hex", "value": "", "disabled": true}
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "POST /api/tools/otp",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {"key": "seed_b32", "value": "{{totpSeed}}", "type": "text"},
+                                        {"key": "seed_hex", "value": "", "type": "text", "disabled": true}
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/tools/otp",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "tools", "otp"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /api/tools/logs",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/tools/logs?lines=1000",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "tools", "logs"],
+                                    "query": [
+                                        {"key": "lines", "value": "1000"}
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "v1",
+                    "item": [
+                        {
+                            "name": "POST /api/v1/get-token",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "var jsonData = pm.response.json();",
+                                            "console.log(\"BEARER TOKEN: \" + jsonData.reply.token);",
+                                            "pm.collectionVariables.set(\"bearerToken\", jsonData.reply.token);"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [{"key": "Content-Type", "value": "application/json"}],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"auth\": {\n    \"username\": \"admin\",\n    \"password\": \"easypassword\"\n  }\n}",
+                                    "options": {"raw": {"headerFamily": "json", "language": "json"}}
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/get-token",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "get-token"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "POST /api/v1/get-token-form",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "var jsonData = pm.response.json();",
+                                            "console.log(\"BEARER TOKEN: \" + jsonData.reply.token);",
+                                            "pm.collectionVariables.set(\"bearerToken\", jsonData.reply.token);"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {"key": "username", "value": "admin", "type": "text"},
+                                        {"key": "password", "value": "easypassword", "type": "text"}
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/get-token-form",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "get-token-form"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /api/v1/is-valid-token",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [{"key": "token", "value": "{{bearerToken}}", "type": "string"}]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/is-valid-token",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "is-valid-token"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /api/v1/header-cookie",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {"key": "secret-header", "value": "{{secretHeaderValue}}"},
+                                    {"key": "Cookie", "value": "secret-cookie={{secretCookieValue}}"}
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/header-cookie",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "header-cookie"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /api/v1/header-cookie-auth",
+                            "request": {
+                                "auth": {
+                                    "type": "basic",
+                                    "basic": [
+                                        {"key": "username", "value": "admin", "type": "string"},
+                                        {"key": "password", "value": "easypassword", "type": "string"}
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {"key": "secret-header", "value": "{{secretHeaderValue}}"},
+                                    {"key": "Cookie", "value": "secret-cookie={{secretCookieValue}}"}
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/header-cookie-auth",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "header-cookie-auth"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /api/v1/users/:user_id",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/users/:user_id",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "users", ":user_id"],
+                                    "variable": [{"key": "user_id", "value": "{{user_id}}"}]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "graphql",
+                            "item": [
+                                {
+                                    "name": "POST /api/v1/graphql",
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [
+                                            {"key": "Content-Type", "value": "application/json"},
+                                            {"key": "secret-header", "value": "{{secretHeaderValue}}"}
+                                        ],
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"query\": \"{ users { id username email } }\"\n}",
+                                            "options": {"raw": {"headerFamily": "json", "language": "json"}}
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/graphql",
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "graphql"]
+                                        }
+                                    },
+                                    "response": []
+                                },
+                                {
+                                    "name": "GET /api/v1/graphql/schema",
+                                    "request": {
+                                        "method": "GET",
+                                        "header": [],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/graphql/schema",
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "graphql", "schema"]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "oauth2",
+                            "item": [
+                                {
+                                    "name": "POST /api/v1/oauth2/token (client_credentials)",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "exec": [
+                                                    "var jsonData = pm.response.json();",
+                                                    "console.log(\"ACCESS TOKEN: \" + jsonData.access_token);",
+                                                    "pm.collectionVariables.set(\"oauthToken\", jsonData.access_token);"
+                                                ],
+                                                "type": "text/javascript"
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"grant_type\": \"client_credentials\",\n  \"client_id\": \"vulapp-client-001\",\n  \"client_secret\": \"super-secret-client-secret\",\n  \"scope\": \"read profile\"\n}",
+                                            "options": {"raw": {"headerFamily": "json", "language": "json"}}
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/oauth2/token",
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "oauth2", "token"]
+                                        }
+                                    },
+                                    "response": []
+                                },
+                                {
+                                    "name": "POST /api/v1/oauth2/token (authorization_code)",
+                                    "event": [
+                                        {
+                                            "listen": "test",
+                                            "script": {
+                                                "exec": [
+                                                    "var jsonData = pm.response.json();",
+                                                    "console.log(\"ACCESS TOKEN: \" + jsonData.access_token);",
+                                                    "pm.collectionVariables.set(\"oauthToken\", jsonData.access_token);"
+                                                ],
+                                                "type": "text/javascript"
+                                            }
+                                        }
+                                    ],
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"grant_type\": \"authorization_code\",\n  \"code\": \"{{oauthAuthCode}}\",\n  \"client_id\": \"vulapp-client-001\",\n  \"client_secret\": \"super-secret-client-secret\",\n  \"redirect_uri\": \"{{baseUrl}}/web/oauth2/callback\"\n}",
+                                            "options": {"raw": {"headerFamily": "json", "language": "json"}}
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/oauth2/token",
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "oauth2", "token"]
+                                        }
+                                    },
+                                    "response": []
+                                },
+                                {
+                                    "name": "GET /api/v1/oauth2/userinfo",
+                                    "request": {
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [{"key": "token", "value": "{{oauthToken}}", "type": "string"}]
+                                        },
+                                        "method": "GET",
+                                        "header": [],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/oauth2/userinfo",
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "oauth2", "userinfo"]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "mle",
+                            "item": [
+                                {
+                                    "name": "GET /api/v1/mle/",
+                                    "request": {
+                                        "method": "GET",
+                                        "header": [],
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/mle/",
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "mle", ""]
+                                        }
+                                    },
+                                    "response": []
+                                },
+                                {
+                                    "name": "POST /api/v1/mle/",
+                                    "request": {
+                                        "method": "POST",
+                                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\n  \"token\": \"<JWE compact token — encrypt your payload with RSA-OAEP + A256GCM using uploads/mle-key-001_public.pem>\"\n}",
+                                            "options": {"raw": {"headerFamily": "json", "language": "json"}}
+                                        },
+                                        "url": {
+                                            "raw": "{{baseUrl}}/api/v1/mle/",
+                                            "host": ["{{baseUrl}}"],
+                                            "path": ["api", "v1", "mle", ""]
+                                        }
+                                    },
+                                    "response": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "web",
+            "item": [
+                {
+                    "name": "GET /",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/",
+                            "host": ["{{baseUrl}}"],
+                            "path": [""]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "auth",
+                    "item": [
+                        {
+                            "name": "GET /web/login",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/login",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "login"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "POST /web/login",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "const cookie = pm.cookies.get('session');",
+                                            "if (cookie) {",
+                                            "    pm.collectionVariables.set('sessionCookie', cookie);",
+                                            "}"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {"key": "username", "value": "admin", "type": "text"},
+                                        {"key": "password", "value": "easypassword", "type": "text"}
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/login",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "login"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/welcome-simple",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {"key": "Cookie", "value": "session={{sessionCookie}}"}
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/welcome-simple",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "welcome-simple"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/login-2fa",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/login-2fa",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "login-2fa"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "POST /web/login-2fa",
+                            "event": [
+                                {
+                                    "listen": "prerequest",
+                                    "script": {
+                                        "exec": [
+                                            "pm.sendRequest(",
+                                            "    pm.collectionVariables.get('baseUrl') + '/api/tools/otp?seed_b32=' + pm.collectionVariables.get('totpSeed'),",
+                                            "    function(err, res) {",
+                                            "        if (!err) {",
+                                            "            pm.collectionVariables.set('otpCode', res.json().otp_code);",
+                                            "        }",
+                                            "    }",
+                                            ");"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                },
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "const cookie = pm.cookies.get('session');",
+                                            "if (cookie) {",
+                                            "    pm.collectionVariables.set('sessionCookie', cookie);",
+                                            "}"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {"key": "username", "value": "admin", "type": "text"},
+                                        {"key": "password", "value": "easypassword", "type": "text"},
+                                        {"key": "otp", "value": "{{otpCode}}", "type": "text"}
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/login-2fa",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "login-2fa"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/welcome-2fa",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {"key": "Cookie", "value": "session={{sessionCookie}}"}
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/welcome-2fa",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "welcome-2fa"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/welcome-basic-auth",
+                            "request": {
+                                "auth": {
+                                    "type": "basic",
+                                    "basic": [
+                                        {"key": "username", "value": "admin", "type": "string"},
+                                        {"key": "password", "value": "easypassword", "type": "string"}
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/welcome-basic-auth",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "welcome-basic-auth"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/welcome-header",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {"key": "secret-header", "value": "{{secretHeaderValue}}"}
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/welcome-header",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "welcome-header"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/welcome-cookie",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {"key": "Cookie", "value": "secret-cookie={{secretCookieValue}}"}
+                                ],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/welcome-cookie",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "welcome-cookie"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/logout",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/logout",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "logout"]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "GET /web/ping",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/web/ping?host=127.0.0.1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["web", "ping"],
+                            "query": [{"key": "host", "value": "127.0.0.1"}]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET /web/users",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/web/users?search=admin",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["web", "users"],
+                            "query": [{"key": "search", "value": "admin"}]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET /web/guestbook",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/web/guestbook?name=guest",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["web", "guestbook"],
+                            "query": [{"key": "name", "value": "guest"}]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET /web/graphql",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/web/graphql",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["web", "graphql"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "oauth2",
+                    "item": [
+                        {
+                            "name": "GET /web/oauth2/login",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/oauth2/login",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "oauth2", "login"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/oauth2/authorize",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/oauth2/authorize?client_id=vulapp-client-001&redirect_uri={{baseUrl}}/web/oauth2/callback&response_type=code&scope=read profile&state=randomstate123",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "oauth2", "authorize"],
+                                    "query": [
+                                        {"key": "client_id", "value": "vulapp-client-001"},
+                                        {"key": "redirect_uri", "value": "{{baseUrl}}/web/oauth2/callback"},
+                                        {"key": "response_type", "value": "code"},
+                                        {"key": "scope", "value": "read profile"},
+                                        {"key": "state", "value": "randomstate123"}
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "POST /web/oauth2/authorize",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "const location = pm.response.headers.get('Location');",
+                                            "if (location) {",
+                                            "    const match = location.match(/[?&]code=([^&]+)/);",
+                                            "    if (match) {",
+                                            "        pm.collectionVariables.set('oauthAuthCode', match[1]);",
+                                            "    }",
+                                            "}"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {"key": "username", "value": "admin", "type": "text"},
+                                        {"key": "password", "value": "easypassword", "type": "text"},
+                                        {"key": "action", "value": "approve", "type": "text"},
+                                        {"key": "client_id", "value": "vulapp-client-001", "type": "text"},
+                                        {"key": "redirect_uri", "value": "{{baseUrl}}/web/oauth2/callback", "type": "text"},
+                                        {"key": "scope", "value": "read profile", "type": "text"},
+                                        {"key": "state", "value": "randomstate123", "type": "text"}
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/oauth2/authorize",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "oauth2", "authorize"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/oauth2/callback",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/oauth2/callback?code={{oauthAuthCode}}&state=randomstate123",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "oauth2", "callback"],
+                                    "query": [
+                                        {"key": "code", "value": "{{oauthAuthCode}}"},
+                                        {"key": "state", "value": "randomstate123"}
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "POST /api/v1/oauth2/token (authorization_code via web flow)",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "var jsonData = pm.response.json();",
+                                            "pm.collectionVariables.set('oauthToken', jsonData.access_token);"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [{"key": "Content-Type", "value": "application/json"}],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"grant_type\": \"authorization_code\",\n  \"code\": \"{{oauthAuthCode}}\",\n  \"client_id\": \"vulapp-client-001\",\n  \"client_secret\": \"super-secret-client-secret\",\n  \"redirect_uri\": \"{{baseUrl}}/web/oauth2/callback\"\n}",
+                                    "options": {"raw": {"headerFamily": "json", "language": "json"}}
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/oauth2/token",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "v1", "oauth2", "token"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "GET /web/oauth2/profile",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [{"key": "token", "value": "{{oauthToken}}", "type": "string"}]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/web/oauth2/profile",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["web", "oauth2", "profile"]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {"type": "text/javascript", "exec": [""]}
+        },
+        {
+            "listen": "test",
+            "script": {"type": "text/javascript", "exec": [""]}
+        }
+    ],
+    "variable": [
+        {"key": "baseUrl", "value": "https://pjn2work.pythonanywhere.com", "type": "string"},
+        {"key": "bearerToken", "value": "", "type": "string"},
+        {"key": "oauthToken", "value": "", "type": "string"},
+        {"key": "oauthAuthCode", "value": "", "type": "string"},
+        {"key": "user_id", "value": "1", "type": "string"},
+        {"key": "secretHeaderValue", "value": "my-secret-header", "type": "string"},
+        {"key": "secretCookieValue", "value": "my-secret-cookie", "type": "string"},
+        {"key": "sessionCookie", "value": "", "type": "string"},
+        {"key": "otpCode", "value": "", "type": "string"},
+        {"key": "totpSeed", "value": "XVQ2UIGO75XRUKJO", "type": "string"}
+    ]
+}
