@@ -37,7 +37,7 @@ def api_logs():
 @api_blp.route('/tools/echo', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def api_echo():
     echo_data = get_echo()
-    return echo_data, 200
+    return jsonify(echo_data), 200
 
 
 # API 2FA OTP Endpoint

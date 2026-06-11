@@ -1,5 +1,6 @@
 """Main application entry point for the vulnerable web app."""
 import os
+import logging
 from flask import Flask, request
 from flask_smorest import Api
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -9,6 +10,19 @@ from vulapp.routes.web_routes import web_bp
 from vulapp.routes.api_routes import api_blp
 from vulapp.utils import get_echo, dict2str
 from vulapp.log_buffer import LOG_BUFFER
+
+
+# Hook into Werkzeug's logger so every access log line (the
+# "IP - - [timestamp] METHOD path status" format) is also fed into
+# LOG_BUFFER, making it available via GET /api/tools/logs.
+class _LogBufferHandler(logging.Handler):
+    def emit(self, record):
+        LOG_BUFFER.append(self.format(record))
+
+_handler = _LogBufferHandler()
+_handler.setFormatter(logging.Formatter('%(message)s'))
+logging.getLogger('werkzeug').addHandler(_handler)
+
 
 # Initialize Flask app
 # Get the directory containing this file (vulapp/)
