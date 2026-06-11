@@ -8,6 +8,7 @@ from vulapp.database import init_db
 from vulapp.routes.web_routes import web_bp
 from vulapp.routes.api_routes import api_blp
 from vulapp.utils import get_echo, dict2str
+from vulapp.log_buffer import LOG_BUFFER
 
 # Initialize Flask app
 # Get the directory containing this file (vulapp/)
@@ -47,9 +48,9 @@ def log_requests():
         #with open("welcome_requests.log", "a") as f:
         #    f.write(log_entry)
 
-        print("\n--- REQUEST RECEIVED ---", flush=True)
-        print(echo_data, flush=True)
-        print("--- END REQUEST ---\n", flush=True)
+        entry = f"--- REQUEST RECEIVED ---\n{echo_data}\n--- END REQUEST ---"
+        LOG_BUFFER.extend(entry.split('\n'))
+        print(f"\n{entry}\n", flush=True)
 
 
 if __name__ == '__main__':

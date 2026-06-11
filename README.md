@@ -56,6 +56,7 @@ All `/api/v1/*` requests are logged to the console.
 | `/web/download/bruno_collection_v3.zip` | GET | None | Download Bruno v3 collection (.yml files, zip) |
 | `/api/tools/echo` | GET, POST, PUT, DELETE, PATCH | None | Echoes all request data (headers, params, body, cookies, session) |
 | `/api/tools/otp` | GET, POST | None | TOTP code generator. Params: `seed_b32` or `seed_hex` |
+| `/api/tools/logs` | GET | None | Last N lines of the request log (plain text). Param: `lines` (default: 1000) |
 | `/api/v1/get-token` | POST | Credentials (JSON body) | Returns Bearer token |
 | `/api/v1/get-token-form` | POST | Credentials (form data) | Returns Bearer token |
 | `/api/v1/is-valid-token` | GET, POST | Bearer Token | Validates Bearer token |
@@ -443,8 +444,13 @@ print(token.decode())
 
 ## Logging and Monitoring
 
-### File Logs
-Requests to `/web/welcome-` or `/api/v1/` endpoints are printed to stdout.
+Requests to `/web/welcome-*` or `/api/v1/*` endpoints are printed to stdout and kept in an in-memory buffer (last 125,000 lines).
+
+Retrieve them without leaving the browser:
+```
+GET /api/tools/logs          # last 1000 lines (default)
+GET /api/tools/logs?lines=500
+```
 
 ---
 

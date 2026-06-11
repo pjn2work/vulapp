@@ -20,6 +20,19 @@ from vulapp.utils import get_otp, get_echo, jwe_encrypt, jwe_decrypt
 api_blp = Blueprint("api", "api", url_prefix="/api", description="Operations on API")
 
 
+# API TOOLS - Logs Endpoint
+@api_blp.route('/tools/logs', methods=['GET'])
+def api_logs():
+    """Return last N lines of the request log (like tail -n <lines>)."""
+    from vulapp.log_buffer import LOG_BUFFER
+    try:
+        n = int(request.args.get('lines', 1_000))
+    except ValueError:
+        n = 1_000
+    lines = list(LOG_BUFFER)[-n:]
+    return make_response('\n'.join(lines), 200, {'Content-Type': 'text/plain; charset=utf-8'})
+
+
 # API TOOLS - Echo Endpoint
 @api_blp.route('/tools/echo', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def api_echo():

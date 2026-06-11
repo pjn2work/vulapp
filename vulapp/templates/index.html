@@ -1060,6 +1060,12 @@ curl http://localhost:5000/api/v1/oauth2/userinfo \
                             <td>TOTP code generator &mdash; params: <code>seed_b32</code> or <code>seed_hex</code></td>
                         </tr>
                         <tr>
+                            <td>/api/tools/logs</td>
+                            <td>GET</td>
+                            <td>None</td>
+                            <td>Returns last N lines of the request log (plain text). Param: <code>lines</code> (default: 1000)</td>
+                        </tr>
+                        <tr>
                             <td>/api/v1/get-token</td>
                             <td>POST</td>
                             <td>Credentials (JSON body)</td>
