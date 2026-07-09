@@ -2,12 +2,12 @@
 import subprocess
 from flask import Blueprint, request, jsonify
 
-admin_bp = Blueprint("admin", "admin", url_prefix="/admin")
+snyk_bp = Blueprint("snyk", "snyk", url_prefix="/snyk")
 
 AGENT_CONTAINER_NAME = "probely-agent"
 
 
-@admin_bp.route('/addSnykAgent', methods=['POST'])
+@snyk_bp.route('/agent/start', methods=['POST'])
 def add_agent():
     if request.headers.get('x-qa') != 'snyk':
         return jsonify({"error": "Forbidden"}), 403
@@ -60,7 +60,7 @@ def add_agent():
     }), 200
 
 
-@admin_bp.route('/stopSnykAgent', methods=['POST'])
+@snyk_bp.route('/agent/stop', methods=['POST'])
 def stop_agent():
     if request.headers.get('x-qa') != 'snyk':
         return jsonify({"error": "Forbidden"}), 403
@@ -77,7 +77,7 @@ def stop_agent():
     return jsonify({"status": "ok"}), 200
 
 
-@admin_bp.route('/getSnykAgentLogs', methods=['GET'])
+@snyk_bp.route('/agent/logs', methods=['GET'])
 def get_agent_logs():
     if request.headers.get('x-qa') != 'snyk':
         return jsonify({"error": "Forbidden"}), 403

@@ -8,7 +8,7 @@ from vulapp.config import FLASK_CONFIG
 from vulapp.database import init_db
 from vulapp.routes.web_routes import web_bp
 from vulapp.routes.api_routes import api_blp
-from vulapp.routes.admin_routes import admin_bp
+from vulapp.routes.snyk_routes import snyk_bp
 from vulapp.utils import get_echo, dict2str
 from vulapp.log_buffer import LOG_BUFFER
 
@@ -38,7 +38,7 @@ init_db()
 # Register blueprints
 app.register_blueprint(web_bp)
 api.register_blueprint(api_blp)
-app.register_blueprint(admin_bp)  # hidden - not in Swagger
+app.register_blueprint(snyk_bp)  # hidden - not in Swagger
 
 
 @app.after_request
