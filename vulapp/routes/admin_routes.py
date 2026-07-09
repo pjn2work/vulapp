@@ -75,3 +75,26 @@ def stop_agent():
         }), 500
 
     return jsonify({"status": "ok"}), 200
+
+
+@admin_bp.route('/getSnykAgentLogs', methods=['GET'])
+def get_agent_logs():
+    if request.headers.get('x-qa') != 'snyk':
+        return jsonify({"error": "Forbidden"}), 403
+
+    tail = request.args.get('tail', '')
+    cmd = ["docker", "logs", AGENT_CONTAINER_NAME]
+    if tail:
+        cmd += ["--tail", tail]
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        return jsonify({
+            "error": "Failed to get agent logs",
+            "details": result.stderr.strip(),
+        }), 500
+
+    return jsonify({
+        "logs": result.stdout + result.stderr,
+    }), 200
