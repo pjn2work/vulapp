@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify
 snyk_bp = Blueprint("snyk", "snyk", url_prefix="/snyk")
 
 AGENT_CONTAINER_NAME = "probely-agent"
-_last_start_cmd = None
+_last_start_cmd = ""
 
 
 @snyk_bp.route('/agent/start', methods=['POST'])
@@ -110,12 +110,12 @@ def get_agent_logs():
         }), 500
 
     logs = (
-        "\n-------- stdout -----------\n" +
-        "\n".join(result.stdout.strip().splitlines()[-50:]) +
-        "\n-------- stderr -----------\n" +
-        "\n".join(result.stderr.strip().splitlines()[-50:])
+        "\n--- start command ---" +
+        f"\n{_last_start_cmd}" +
+        "\n-- stdout --\n" +
+        "\n".join(result.stdout.strip().splitlines()[-20:]) +
+        "\n-- stderr --\n" +
+        "\n".join(result.stderr.strip().splitlines()[-20:])
     )
-    if _last_start_cmd:
-        logs += f"\n--- start command ---\n{_last_start_cmd}\n"
 
     return jsonify({"logs": logs}), 200
