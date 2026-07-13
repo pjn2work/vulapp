@@ -24,29 +24,29 @@ def add_agent():
         return jsonify({"error": "Bad 'token' of 'api_url' values"}), 400
 
     # Stop and remove existing container (ignore errors if it doesn't exist)
-    subprocess.run(
-        ["docker", "stop", AGENT_CONTAINER_NAME],
-        capture_output=True,
-    )
-    subprocess.run(
-        ["docker", "rm", AGENT_CONTAINER_NAME],
-        capture_output=True,
-    )
+    try:
+        subprocess.run(["docker", "stop", AGENT_CONTAINER_NAME], capture_output=True)
+        subprocess.run(["docker", "rm", AGENT_CONTAINER_NAME], capture_output=True)
+    except Exception as e:
+        return jsonify({"error": "Failed to stop existing agent container", "details": str(e)}), 500
 
     # Start new agent container
-    result = subprocess.run(
-        [
-            "docker", "run", "-d",
-            "--name", AGENT_CONTAINER_NAME,
-            "--cap-add", "NET_ADMIN",
-            "-e", f"FARCASTER_AGENT_TOKEN={token}",
-            "-e", f"FARCASTER_API_URL={farcaster_api_url}",
-            "--device", "/dev/net/tun",
-            "probely/farcaster-onprem-agent:v3",
-        ],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "docker", "run", "-d",
+                "--name", AGENT_CONTAINER_NAME,
+                "--cap-add", "NET_ADMIN",
+                "-e", f"FARCASTER_AGENT_TOKEN={token}",
+                "-e", f"FARCASTER_API_URL={farcaster_api_url}",
+                "--device", "/dev/net/tun",
+                "probely/farcaster-onprem-agent:v3",
+            ],
+            capture_output=True,
+            text=True,
+        )
+    except Exception as e:
+        return jsonify({"error": "Failed to start agent container", "details": str(e)}), 500
 
     if result.returncode != 0:
         return jsonify({
@@ -65,8 +65,11 @@ def stop_agent():
     if request.headers.get('x-qa') != 'snyk':
         return jsonify({"error": "Forbidden"}), 403
 
-    stop = subprocess.run(["docker", "stop", AGENT_CONTAINER_NAME], capture_output=True, text=True)
-    rm = subprocess.run(["docker", "rm", AGENT_CONTAINER_NAME], capture_output=True, text=True)
+    try:
+        stop = subprocess.run(["docker", "stop", AGENT_CONTAINER_NAME], capture_output=True, text=True)
+        rm = subprocess.run(["docker", "rm", AGENT_CONTAINER_NAME], capture_output=True, text=True)
+    except Exception as e:
+        return jsonify({"error": "Failed to stop agent container", "details": str(e)}), 500
 
     if stop.returncode != 0 and rm.returncode != 0:
         return jsonify({
@@ -87,7 +90,10 @@ def get_agent_logs():
     if tail:
         cmd += ["--tail", tail]
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True)
+    except Exception as e:
+        return jsonify({"error": "Failed to get agent logs", "details": str(e)}), 500
 
     if result.returncode != 0:
         return jsonify({

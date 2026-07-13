@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy requirements file
 COPY requirements.txt .
 
+# Install Docker CLI
+RUN apt-get update && apt-get install -y --no-install-recommends docker.io && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
