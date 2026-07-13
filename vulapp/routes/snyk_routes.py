@@ -109,7 +109,12 @@ def get_agent_logs():
             "details": result.stderr.strip(),
         }), 500
 
-    logs = result.stdout + result.stderr
+    logs = (
+        "\n-------- stdout -----------\n" +
+        "\n".join(result.stdout.strip().splitlines()[-50:]) +
+        "\n-------- stderr -----------\n" +
+        "\n".join(result.stderr.strip().splitlines()[-50:])
+    )
     if _last_start_cmd:
         logs += f"\n--- start command ---\n{_last_start_cmd}\n"
 
