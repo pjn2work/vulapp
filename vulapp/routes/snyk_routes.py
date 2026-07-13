@@ -5,10 +5,12 @@ from flask import Blueprint, request, jsonify
 snyk_bp = Blueprint("snyk", "snyk", url_prefix="/snyk")
 
 AGENT_CONTAINER_NAME = "probely-agent"
+_last_start_cmd = None
 
 
 @snyk_bp.route('/agent/start', methods=['POST'])
 def add_agent():
+    global _last_start_cmd
     if request.headers.get('x-qa') != 'snyk':
         return jsonify({"error": "Forbidden"}), 403
 
@@ -31,6 +33,12 @@ def add_agent():
         return jsonify({"error": "Failed to stop existing agent container", "details": str(e)}), 500
 
     # Start new agent container
+    _last_start_cmd = (
+        f"docker run -d --name {AGENT_CONTAINER_NAME} --cap-add NET_ADMIN"
+        f" -e FARCASTER_AGENT_TOKEN={token}"
+        f" -e FARCASTER_API_URL={farcaster_api_url}"
+        f" --device /dev/net/tun probely/farcaster-onprem-agent:v3"
+    )
     try:
         result = subprocess.run(
             [
@@ -101,6 +109,8 @@ def get_agent_logs():
             "details": result.stderr.strip(),
         }), 500
 
-    return jsonify({
-        "logs": result.stdout + result.stderr,
-    }), 200
+    logs = result.stdout + result.stderr
+    if _last_start_cmd:
+        logs += f"\n--- start command ---\n{_last_start_cmd}\n"
+
+    return jsonify({"logs": logs}), 200
