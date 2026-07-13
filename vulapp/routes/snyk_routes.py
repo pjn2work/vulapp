@@ -51,7 +51,7 @@ def add_agent():
     if result.returncode != 0:
         return jsonify({
             "error": "Failed to start agent container",
-            "details": result.stderr.strip(),
+            "details": "\n".join(result.stderr.strip().splitlines()[-4:]),
         }), 500
 
     return jsonify({
