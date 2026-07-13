@@ -113,9 +113,9 @@ def get_agent_logs():
         "\n--- start command ---" +
         f"\n{_last_start_cmd}" +
         "\n-- stdout --\n" +
-        "\n".join(result.stdout.strip().splitlines()[-20:]) +
+        "\n".join(result.stdout.strip().splitlines()) +
         "\n-- stderr --\n" +
-        "\n".join(result.stderr.strip().splitlines()[-20:])
+        "\n".join(result.stderr.strip().splitlines())
     )
 
     return jsonify({"logs": logs}), 200
