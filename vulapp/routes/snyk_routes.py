@@ -37,7 +37,7 @@ def add_agent():
         f"docker run -d --name {AGENT_CONTAINER_NAME} --cap-add NET_ADMIN"
         f" -e FARCASTER_AGENT_TOKEN={token}"
         f" -e FARCASTER_API_URL={farcaster_api_url}"
-        f" -e FARCASTER_FORCE_TCP=1"
+        #f" -e FARCASTER_FORCE_TCP=1"
         f" --device /dev/net/tun probely/farcaster-onprem-agent:v3"
     )
     try:
@@ -48,7 +48,7 @@ def add_agent():
                 "--cap-add", "NET_ADMIN",
                 "-e", f"FARCASTER_AGENT_TOKEN={token}",
                 "-e", f"FARCASTER_API_URL={farcaster_api_url}",
-                "-e", f"FARCASTER_FORCE_TCP=1",
+                #"-e", f"FARCASTER_FORCE_TCP=1",
                 "--device", "/dev/net/tun",
                 "probely/farcaster-onprem-agent:v3",
             ],
