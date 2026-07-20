@@ -7,7 +7,7 @@ import subprocess
 import pyotp
 from flask import Blueprint, request, render_template, redirect, url_for, session, make_response, jsonify, send_from_directory
 from graphene import ObjectType, String, Schema, List, Field, Int
-from vulapp.auth import requires_basic_auth, requires_session, requires_2fa_session, requires_secret_header, requires_secret_cookie
+from vulapp.auth import requires_basic_auth, requires_session, requires_2fa_session, requires_2fa_consent_session, requires_secret_header, requires_secret_cookie
 from vulapp.config import (
     USERNAME, PASSWORD, TOTP_SEED, SECRET_HEADER_NAME, SECRET_HEADER_VALUE,
     SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE, DATABASE,
@@ -68,9 +68,7 @@ def welcome_simple():
     return render_template('welcome_simple.html', username=username)
 
 
-# 3. 2FA Login (User + Pass + TOTP)
-@web_bp.route('/web/login-2fa', methods=['GET', 'POST'])
-def login_2fa():
+def _handle_login_2fa(with_consent=False):
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -82,6 +80,9 @@ def login_2fa():
                 totp = pyotp.TOTP(TOTP_SEED)
                 if totp.verify(otp):
                     session['username'] = username
+                    if with_consent:
+                        session['2fa_consent_pending'] = True
+                        return redirect(url_for('web.login_2fa_with_consent_page'))
                     session['2fa_logged_in'] = True
                     response = make_response(redirect(url_for('web.welcome_2fa')))
                     #response.set_cookie(SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE)
@@ -94,12 +95,57 @@ def login_2fa():
     return render_template('login_2fa.html')
 
 
+# 3. 2FA Login (User + Pass + TOTP)
+@web_bp.route('/web/login-2fa', methods=['GET', 'POST'])
+def login_2fa():
+    return _handle_login_2fa(with_consent=False)
+
+
+# 3b. 2FA Login with Consent (User + Pass + TOTP + Consent)
+@web_bp.route('/web/login-2fa-with-consent', methods=['GET', 'POST'])
+def login_2fa_with_consent():
+    return _handle_login_2fa(with_consent=True)
+
+
+@web_bp.route('/web/login-2fa-with-consent/consent', methods=['GET', 'POST'])
+def login_2fa_with_consent_page():
+    if not session.get('2fa_consent_pending'):
+        return redirect(url_for('web.login_2fa_with_consent'))
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        consent = request.form.get('consent', '')
+
+        if action == 'cancel' or not consent:
+            session.pop('2fa_consent_pending', None)
+            session.pop('username', None)
+            return render_template('login_2fa.html', error_message="you need to consent"), 404
+
+        session.pop('2fa_consent_pending', None)
+        session['2fa_logged_in'] = True
+        session['2fa_consent'] = True
+        response = make_response(redirect(url_for('web.welcome_2fa_with_consent')))
+        #response.set_cookie(SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE)
+        return response
+
+    return render_template('consent_2fa.html')
+
+
 @web_bp.route('/web/welcome-2fa')
 @requires_2fa_session
 def welcome_2fa():
     # VULNERABLE: Reflected XSS via username
     username = session.get('username', '!NOT FOUND!')
     return f"<h1>You are welcome {username}!</h1><p>You have successfully logged in with 2FA.</p>"
+
+
+@web_bp.route('/web/welcome-2fa-with-consent')
+@requires_2fa_session
+@requires_2fa_consent_session
+def welcome_2fa_with_consent():
+    # VULNERABLE: Reflected XSS via username
+    username = session.get('username', '!NOT FOUND!')
+    return f"<h1>You are welcome {username}!</h1><p>You have successfully logged in with 2FA and given consent.</p>"
 
 
 @web_bp.route('/web/welcome-header')

@@ -9,9 +9,12 @@ This document provides a detailed overview of all endpoints available in the app
 | `/` | `GET` | None | Index page. | `200 OK` |
 | `/web/login` | `GET`, `POST` | **Form Data**: `username`, `password` | Simple Login form. **Vulnerable to SQL Injection Bypass**. | `200 OK`, `302 Redirect` (Success), `401 Unauthorized` (Fail), `500 Error` |
 | `/web/login-2fa` | `GET`, `POST` | **Form Data**: `username`, `password`, `otp` | 2FA Login with TOTP. Requires `XVQ2UIGO75XRUKJO` seed. | `200 OK`, `302 Redirect` (Success), `401 Unauthorized` (Fail), `404 Error` |
+| `/web/login-2fa-with-consent` | `GET`, `POST` | **Form Data**: `username`, `password`, `otp` | 2FA Login with TOTP + consent step. Same credentials as above. | `200 OK`, `302 Redirect` (to consent), `401 Unauthorized` (Fail), `404 Error` |
+| `/web/login-2fa-with-consent/consent` | `GET`, `POST` | **Session**: `2fa_consent_pending: True`<br>**Form Data**: `action` (`submit`/`cancel`), `consent` (`yes`) | Consent page. Checkbox must be checked to submit. Cancel or unchecked returns 404. | `302 Redirect` (Success), `404 Not Found` (Cancel/no consent) |
 | `/web/welcome-basic-auth` | `GET` | **Basic Auth**: `admin` / `easypassword` | Protected welcome page using Basic Authentication. | `200 OK`, `401 Unauthorized` |
 | `/web/welcome-simple` | `GET` | **Session**: `logged_in: True` | Welcome page for simple login. **Vulnerable to Reflected XSS** via username. | `200 OK`, `401 Unauthorized` |
 | `/web/welcome-2fa` | `GET` | **Session**: `2fa_logged_in: True` | Welcome page for 2FA login. **Vulnerable to Reflected XSS** via username. | `200 OK`, `401 Unauthorized` |
+| `/web/welcome-2fa-with-consent` | `GET` | **Session**: `2fa_consent: True` | Welcome page for 2FA+consent login. **Vulnerable to Reflected XSS** via username. | `200 OK`, `403 Forbidden` |
 | `/web/welcome-header` | `GET` | **Header**: `secret-header: my-secret-header` | Page accessible only with a specific secret header. | `200 OK`, `501 Not Implemented` (Fail) |
 | `/web/welcome-cookie` | `GET` | None (Optional cookie check commented out) | Page that demonstrates CORS/XHR. | `200 OK` |
 | `/web/ping` | `GET` | **Query Param**: `host` | Network utility. **Vulnerable to Command Injection** via `host`. | `200 OK` |

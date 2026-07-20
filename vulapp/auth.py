@@ -39,6 +39,15 @@ def requires_2fa_session(f):
     return decorated
 
 
+def requires_2fa_consent_session(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('2fa_consent'):
+            return "You must login with 2FA and consent first! Using the /web/login-2fa-with-consent address", 403
+        return f(*args, **kwargs)
+    return decorated
+
+
 def requires_secret_header(f):
     @wraps(f)
     def decorated(*args, **kwargs):

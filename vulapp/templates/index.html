@@ -520,6 +520,14 @@
                         </div>
                     </div>
                     <div class="card">
+                        <div class="card-title">2FA Login with Consent</div>
+                        <div class="card-description">Username + Password + TOTP + explicit consent step</div>
+                        <span class="badge badge-warning">Multi-factor Auth + Consent</span>
+                        <div style="margin-top: 1rem;">
+                            <a href="/web/login-2fa-with-consent" class="btn">Access 2FA + Consent Login</a>
+                        </div>
+                    </div>
+                    <div class="card">
                         <div class="card-title">OAuth2 Login</div>
                         <div class="card-description">Authorization Code Flow with consent screen</div>
                         <span class="badge badge-danger">Open Redirect</span>
@@ -543,6 +551,7 @@
                     <li><a href="/web/welcome-basic-auth"><span class="link-icon">🔐</span> Basic Auth Required</a></li>
                     <li><a href="/web/welcome-simple"><span class="link-icon">🔑</span> Session Required (logged_in: true)</a></li>
                     <li><a href="/web/welcome-2fa"><span class="link-icon">🛡️</span> 2FA Session Required (2fa_logged_in: true)</a></li>
+                    <li><a href="/web/welcome-2fa-with-consent"><span class="link-icon">🛡️</span> 2FA + Consent Session Required (2fa_consent: true)</a></li>
                     <li><a href="/web/welcome-header"><span class="link-icon">📋</span> Secret Header Required</a></li>
                     <li><a href="/web/welcome-cookie"><span class="link-icon">🍪</span> Secret Cookie Required</a></li>
                 </ul>
@@ -624,6 +633,24 @@
                             <td>GET</td>
                             <td>Session: 2fa_logged_in=True</td>
                             <td>Post-2FA welcome page &mdash; Reflected XSS</td>
+                        </tr>
+                        <tr>
+                            <td>/web/login-2fa-with-consent</td>
+                            <td>GET, POST</td>
+                            <td>None</td>
+                            <td>Login with TOTP 2FA + consent step</td>
+                        </tr>
+                        <tr>
+                            <td>/web/login-2fa-with-consent/consent</td>
+                            <td>GET, POST</td>
+                            <td>Session: 2fa_consent_pending=True</td>
+                            <td>Consent page &mdash; checkbox required to proceed</td>
+                        </tr>
+                        <tr>
+                            <td>/web/welcome-2fa-with-consent</td>
+                            <td>GET</td>
+                            <td>Session: 2fa_consent=True</td>
+                            <td>Post-2FA+consent welcome page &mdash; Reflected XSS</td>
                         </tr>
                         <tr>
                             <td>/web/welcome-basic-auth</td>

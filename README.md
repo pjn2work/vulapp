@@ -30,6 +30,9 @@ All `/web/welcome-*` requests are logged to the console.
 | `/web/welcome-simple` | GET | Session `logged_in: True` | Post-login welcome page. **Reflected XSS** |
 | `/web/login-2fa` | GET, POST | None | Login form with TOTP 2FA |
 | `/web/welcome-2fa` | GET | Session `2fa_logged_in: True` | Post-2FA welcome page. **Reflected XSS** |
+| `/web/login-2fa-with-consent` | GET, POST | None | Login form with TOTP 2FA + consent step |
+| `/web/login-2fa-with-consent/consent` | GET, POST | Session `2fa_consent_pending: True` | Consent page — checkbox required to proceed; cancel returns 404 |
+| `/web/welcome-2fa-with-consent` | GET | Session `2fa_consent: True` | Post-2FA+consent welcome page. **Reflected XSS** |
 | `/web/welcome-basic-auth` | GET | Basic Auth (`admin` / `easypassword`) | Protected by HTTP Basic Auth |
 | `/web/welcome-header` | GET | Header `secret-header: my-secret-header` | Protected by secret header |
 | `/web/welcome-cookie` | GET | Cookie `secret-cookie=my-secret-cookie` | Protected by secret cookie |
