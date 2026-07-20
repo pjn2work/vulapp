@@ -194,6 +194,11 @@
                 <h1>Two-Factor Login</h1>
                 <p class="subtitle">Enhanced Security with TOTP</p>
                 <span class="badge">Multi-Factor Authentication</span>
+                {% if with_consent %}
+                <div style="margin-top: 1rem; padding: 0.6rem 1rem; background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.3); border-radius: 6px; font-size: 0.8rem; color: #fbbf24;">
+                    A consent screen will follow after successful login.
+                </div>
+                {% endif %}
             </div>
 
             <form method="POST">

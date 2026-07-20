@@ -87,12 +87,12 @@ def _handle_login_2fa(with_consent=False):
                     response = make_response(redirect(url_for('web.welcome_2fa')))
                     #response.set_cookie(SECRET_COOKIE_NAME, SECRET_COOKIE_VALUE)
                     return response
-                return render_template('login_2fa.html', error_message=f"Invalid 2FA code '{otp}' for seed {TOTP_SEED}"), 401
+                return render_template('login_2fa.html', with_consent=with_consent, error_message=f"Invalid 2FA code '{otp}' for seed {TOTP_SEED}"), 401
             except Exception as ex:
-                return render_template('login_2fa.html', error_message=f"Error: {ex}"), 404
-        return render_template('login_2fa.html', error_message="Invalid credentials or OTP code."), 401
+                return render_template('login_2fa.html', with_consent=with_consent, error_message=f"Error: {ex}"), 404
+        return render_template('login_2fa.html', with_consent=with_consent, error_message="Invalid credentials or OTP code."), 401
 
-    return render_template('login_2fa.html')
+    return render_template('login_2fa.html', with_consent=with_consent)
 
 
 # 3. 2FA Login (User + Pass + TOTP)
