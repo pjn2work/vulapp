@@ -185,19 +185,13 @@
             <div class="header">
                 <h1>Simple Login</h1>
                 <p class="subtitle">Username + Password Authentication</p>
+                <p class="badge">Uses shadow inputs</p>
                 <span class="badge">SQL Injection Vulnerable</span>
             </div>
 
             <form method="POST">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="Enter username" autofocus>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="Enter password">
-                </div>
+                <shadow-input name="username" label="Username" placeholder="Enter username" autofocus></shadow-input>
+                <shadow-input name="password" label="Password" type="password" placeholder="Enter password"></shadow-input>
 
                 <button type="submit">Sign In</button>
             </form>
@@ -221,5 +215,74 @@
             </div>
         </div>
     </div>
+    <script>
+        class ShadowInput extends HTMLElement {
+            static formAssociated = true;
+
+            constructor() {
+                super();
+                this.internals_ = this.attachInternals();
+                this.attachShadow({ mode: 'open' });
+            }
+
+            connectedCallback() {
+                const labelText = this.getAttribute('label') || '';
+                const inputType = this.getAttribute('type') || 'text';
+                const placeholder = this.getAttribute('placeholder') || '';
+                const autofocus = this.hasAttribute('autofocus');
+
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: block;
+                            margin-bottom: 1.5rem;
+                        }
+                        label {
+                            display: block;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                            font-size: 0.875rem;
+                            font-weight: 600;
+                            color: #d1d5db;
+                            margin-bottom: 0.5rem;
+                        }
+                        input {
+                            width: 100%;
+                            padding: 0.75rem 1rem;
+                            background: #0a0a0a;
+                            border: 1px solid #374151;
+                            border-radius: 6px;
+                            color: #ffffff;
+                            font-size: 1rem;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                            transition: all 0.2s ease;
+                            box-sizing: border-box;
+                        }
+                        input:focus {
+                            outline: none;
+                            border-color: #a78bfa;
+                            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+                        }
+                        input::placeholder {
+                            color: #6b7280;
+                        }
+                    </style>
+                    <label>
+                        ${labelText}
+                        <input type="${inputType}" placeholder="${placeholder}">
+                    </label>
+                `;
+
+                const input = this.shadowRoot.querySelector('input');
+
+                if (autofocus) input.focus();
+
+                input.addEventListener('input', () => {
+                    this.internals_.setFormValue(input.value);
+                });
+            }
+        }
+
+        customElements.define('shadow-input', ShadowInput);
+    </script>
 </body>
 </html>
