@@ -190,8 +190,8 @@
             </div>
 
             <form method="POST">
-                <shadow-input name="username" label="Username" placeholder="Enter username" autofocus></shadow-input>
-                <shadow-input name="password" label="Password" type="password" placeholder="Enter password"></shadow-input>
+                <shadow-input name="shadow-username" newname="username" label="Username" placeholder="Enter username" autofocus></shadow-input>
+                <shadow-input name="shadow-password" newname="password" label="Password" type="password" placeholder="Enter password"></shadow-input>
 
                 <button type="submit">Sign In</button>
             </form>
@@ -228,6 +228,7 @@
             connectedCallback() {
                 const labelText = this.getAttribute('label') || '';
                 const inputType = this.getAttribute('type') || 'text';
+                const newName = this.getAttribute('newname') || 'username';
                 const placeholder = this.getAttribute('placeholder') || '';
                 const autofocus = this.hasAttribute('autofocus');
 
@@ -268,7 +269,7 @@
                     </style>
                     <label>
                         ${labelText}
-                        <input type="${inputType}" placeholder="${placeholder}">
+                        <input type="${inputType}" name="${newName}" placeholder="${placeholder}">
                     </label>
                 `;
 
