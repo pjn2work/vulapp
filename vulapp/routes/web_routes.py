@@ -78,7 +78,7 @@ def _handle_login_2fa(with_consent=False):
         if username == USERNAME and password == PASSWORD:
             try:
                 totp = pyotp.TOTP(TOTP_SEED)
-                if totp.verify(otp):
+                if totp.verify(otp, valid_window=1):
                     session['username'] = username
                     if with_consent:
                         session['2fa_consent_pending'] = True
