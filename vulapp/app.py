@@ -59,7 +59,7 @@ def log_access(response):
 @app.before_request
 def log_requests():
     """Log requests to welcome and API endpoints."""
-    if request.path.startswith('/web/welcome-') or request.path.startswith('/api/v1/'):
+    if request.path.startswith('/web/welcome-') or request.path.startswith('/web/oauth2/') or request.path.startswith('/api/v1/'):
         echo_data: str = dict2str(get_echo())
 
         # Log to file
