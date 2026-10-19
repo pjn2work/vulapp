@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a0a2a 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e5e7eb;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 32px;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        form.gate {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 420px;
+        }
+
+        label {
+            color: #d1d5db;
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: #0a0a0a;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #a78bfa;
+        }
+
+        button {
+            padding: 12px 18px;
+            background: #7c3aed;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background: #6d28d9;
+        }
+
+        button:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: transparent;
+            border: 1px solid #374151;
+            color: #d1d5db;
+        }
+
+        button.secondary:hover {
+            background: #262626;
+        }
+
+        .error {
+            color: #f87171;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .chat-header .meta {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        #messages {
+            height: 60vh;
+            overflow-y: auto;
+            background: #0a0a0a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .empty {
+            color: #6b7280;
+            text-align: center;
+            margin: auto;
+            font-size: 14px;
+        }
+
+        .message {
+            background: #1f1f1f;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .message.mine {
+            border-color: #5b21b6;
+        }
+
+        .message-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .message-head .ip {
+            color: #a78bfa;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .message-head .time {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .message-head .copy {
+            margin-left: auto;
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .message-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #f3f4f6;
+            font-size: 15px;
+        }
+
+        form.composer {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            align-items: flex-end;
+        }
+
+        form.composer textarea {
+            resize: vertical;
+            min-height: 48px;
+            max-height: 200px;
+        }
+
+        .hint {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .container { padding: 16px; }
+            #messages { height: 55vh; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Step 1: chat key -->
+    <section id="step-key">
+        <h1>Chat</h1>
+        <p class="subtitle">Enter a chat key. A key that doesn't exist yet starts a new chat.</p>
+        <form class="gate" id="key-form" autocomplete="off">
+            <label for="key-input">Chat key</label>
+            <input type="password" id="key-input" maxlength="256" required autofocus>
+            <button type="submit">Continue</button>
+            <div class="error" id="key-error"></div>
+        </form>
+    </section>
+
+    <!-- Step 2: password -->
+    <section id="step-password" class="hidden">
+        <h1 id="password-title">Enter password</h1>
+        <p class="subtitle" id="password-subtitle"></p>
+        <form class="gate" id="password-form" autocomplete="off">
+            <label for="password-input">Password</label>
+            <input type="password" id="password-input" minlength="{{ min_password_length }}" maxlength="128" required>
+            <div id="confirm-wrap" class="hidden">
+                <label for="confirm-input">Confirm password</label>
+                <input type="password" id="confirm-input" maxlength="128">
+            </div>
+            <button type="submit" id="password-submit">Enter chat</button>
+            <button type="button" class="secondary" id="password-back">Back</button>
+            <div class="error" id="password-error"></div>
+        </form>
+    </section>
+
+    <!-- Step 3: chat -->
+    <section id="step-chat" class="hidden">
+        <div class="chat-header">
+            <div>
+                <h1>Chat</h1>
+                <div class="meta">Messages are kept for 24 hours. A chat with no messages left is deleted.</div>
+            </div>
+            <button type="button" class="secondary" id="leave-btn">Leave</button>
+        </div>
+        <div id="messages"><div class="empty" id="empty-state">No messages in the last 24 hours.</div></div>
+        <form class="composer" id="composer">
+            <textarea id="message-input" maxlength="{{ max_message_length }}" placeholder="Type a message…" rows="2"></textarea>
+            <button type="submit" id="send-btn">Send</button>
+        </form>
+        <div class="hint">Enter to send, Shift+Enter for a new line.</div>
+        <div class="error" id="chat-error"></div>
+    </section>
+
+</div>
+
+<script>
+(function () {
+    const TOKEN_KEY = 'chat_token';
+    const POLL_MS = {{ poll_interval_ms|int }};
+
+    const $ = (id) => document.getElementById(id);
+    const steps = { key: $('step-key'), password: $('step-password'), chat: $('step-chat') };
+
+    let pendingKey = null;
+    let isNewChat = false;
+    let token = null;
+    let lastId = 0;
+    let pollTimer = null;
+    const myMessageIds = new Set();
+
+    function show(step) {
+        Object.entries(steps).forEach(([name, el]) => el.classList.toggle('hidden', name !== step));
+    }
+
+    function readToken() {
+        try { return sessionStorage.getItem(TOKEN_KEY); } catch (e) { return null; }
+    }
+
+    function writeToken(value) {
+        try {
+            if (value) sessionStorage.setItem(TOKEN_KEY, value);
+            else sessionStorage.removeItem(TOKEN_KEY);
+        } catch (e) { /* storage unavailable: token lives only in memory */ }
+    }
+
+    async function api(method, path, body) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['X-Chat-Token'] = token;
+        const res = await fetch(path, {
+            method,
+            headers,
+            body: body ? JSON.stringify(body) : undefined,
+            cache: 'no-store',
+        });
+        let data = {};
+        try { data = await res.json(); } catch (e) { /* non-JSON response */ }
+        return { ok: res.ok, status: res.status, data };
+    }
+
+    // ---- Step 1: key ----
+    $('key-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        $('key-error').textContent = '';
+        const key = $('key-input').value;
+        if (!key.trim()) return;
+        const { ok, data } = await api('POST', '/chat/api/check', { key });
+        if (!ok) {
+            $('key-error').textContent = data.error || 'Something went wrong';
+            return;
+        }
+        pendingKey = key;
+        isNewChat = !data.exists;
+        $('password-title').textContent = isNewChat ? 'Create a new chat' : 'Enter password';
+        $('password-subtitle').textContent = isNewChat
+            ? 'No chat exists with this key. Choose a password; everyone who joins will need it.'
+            : 'This chat is protected by a password.';
+        $('password-submit').textContent = isNewChat ? 'Create chat' : 'Enter chat';
+        $('confirm-wrap').classList.toggle('hidden', !isNewChat);
+        $('confirm-input').required = isNewChat;
+        $('password-input').value = '';
+        $('confirm-input').value = '';
+        $('password-error').textContent = '';
+        show('password');
+        $('password-input').focus();
+    });
+
+    // ---- Step 2: password ----
+    $('password-back').addEventListener('click', () => {
+        pendingKey = null;
+        show('key');
+        $('key-input').focus();
+    });
+
+    $('password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        $('password-error').textContent = '';
+        const password = $('password-input').value;
+        if (isNewChat && password !== $('confirm-input').value) {
+            $('password-error').textContent = 'Passwords do not match';
+            return;
+        }
+        $('password-submit').disabled = true;
+        const { ok, data } = await api('POST', '/chat/api/join', { key: pendingKey, password });
+        $('password-submit').disabled = false;
+        if (!ok) {
+            $('password-error').textContent = data.error || 'Something went wrong';
+            return;
+        }
+        pendingKey = null;
+        $('key-input').value = '';
+        $('password-input').value = '';
+        $('confirm-input').value = '';
+        enterChat(data.token);
+    });
+
+    // ---- Step 3: chat ----
+    function enterChat(newToken) {
+        token = newToken;
+        writeToken(token);
+        lastId = 0;
+        myMessageIds.clear();
+        $('messages').replaceChildren(emptyState());
+        $('chat-error').textContent = '';
+        show('chat');
+        $('message-input').focus();
+        poll();
+    }
+
+    function leaveChat(message) {
+        clearTimeout(pollTimer);
+        pollTimer = null;
+        token = null;
+        writeToken(null);
+        show('key');
+        $('key-error').textContent = message || '';
+        $('key-input').focus();
+    }
+
+    $('leave-btn').addEventListener('click', () => leaveChat());
+
+    function emptyState() {
+        const el = document.createElement('div');
+        el.className = 'empty';
+        el.id = 'empty-state';
+        el.textContent = 'No messages in the last 24 hours.';
+        return el;
+    }
+
+    async function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return;
+        }
+        // Fallback for plain-HTTP deployments, where the Clipboard API is unavailable
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const copied = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (!copied) throw new Error('copy failed');
+    }
+
+    // Built with textContent only - message text is never parsed as HTML
+    function renderMessage(m) {
+        const el = document.createElement('div');
+        el.className = 'message' + (myMessageIds.has(m.id) ? ' mine' : '');
+        el.dataset.id = m.id;
+
+        const head = document.createElement('div');
+        head.className = 'message-head';
+
+        const ip = document.createElement('span');
+        ip.className = 'ip';
+        ip.textContent = m.ip;
+
+        const time = document.createElement('span');
+        time.className = 'time';
+        time.textContent = m.datetime;
+
+        const copy = document.createElement('button');
+        copy.type = 'button';
+        copy.className = 'secondary copy';
+        copy.textContent = 'Copy';
+        copy.addEventListener('click', async () => {
+            try {
+                await copyText(m.text);
+                copy.textContent = 'Copied!';
+            } catch (e) {
+                copy.textContent = 'Copy failed';
+            }
+            setTimeout(() => { copy.textContent = 'Copy'; }, 1500);
+        });
+
+        head.append(ip, time, copy);
+
+        const text = document.createElement('div');
+        text.className = 'message-text';
+        text.textContent = m.text;
+
+        el.append(head, text);
+        return el;
+    }
+
+    function applyMessages(messages, oldestId) {
+        const box = $('messages');
+        const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+
+        // Drop messages that expired on the server (older than 24h)
+        box.querySelectorAll('.message').forEach((el) => {
+            if (Number(el.dataset.id) < oldestId) el.remove();
+        });
+
+        messages.forEach((m) => {
+            if (m.id <= lastId) return;
+            box.appendChild(renderMessage(m));
+            lastId = m.id;
+        });
+
+        const hasMessages = box.querySelector('.message') !== null;
+        const empty = $('empty-state');
+        if (hasMessages && empty) empty.remove();
+        if (!hasMessages && !empty) box.appendChild(emptyState());
+
+        if (nearBottom || messages.some((m) => myMessageIds.has(m.id))) {
+            box.scrollTop = box.scrollHeight;
+        }
+    }
+
+    async function poll() {
+        clearTimeout(pollTimer);
+        if (!token) return;
+        try {
+            const { ok, status, data } = await api('GET', '/chat/api/messages?after=' + lastId);
+            if (status === 401) {
+                leaveChat('Your access to this chat has expired. Enter the key again.');
+                return;
+            }
+            if (ok) {
+                $('chat-error').textContent = '';
+                applyMessages(data.messages, data.oldest_id);
+            }
+        } catch (e) {
+            $('chat-error').textContent = 'Connection problem, retrying…';
+        }
+        if (token) pollTimer = setTimeout(poll, POLL_MS);
+    }
+
+    async function send() {
+        const input = $('message-input');
+        const text = input.value;
+        if (!text.trim()) return;
+        $('send-btn').disabled = true;
+        try {
+            const { ok, status, data } = await api('POST', '/chat/api/messages', { text });
+            if (status === 401) {
+                leaveChat('Your access to this chat has expired. Enter the key again.');
+                return;
+            }
+            if (!ok) {
+                $('chat-error').textContent = data.error || 'Could not send message';
+                return;
+            }
+            myMessageIds.add(data.id);
+            input.value = '';
+            $('chat-error').textContent = '';
+            poll();
+        } catch (e) {
+            $('chat-error').textContent = 'Could not send message';
+        } finally {
+            $('send-btn').disabled = false;
+            input.focus();
+        }
+    }
+
+    $('composer').addEventListener('submit', (e) => {
+        e.preventDefault();
+        send();
+    });
+
+    $('message-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            send();
+        }
+    });
+
+    // Resume the chat after a page reload in the same tab
+    const saved = readToken();
+    if (saved) enterChat(saved);
+})();
+</script>
+</body>
+</html>

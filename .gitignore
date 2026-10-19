@@ -221,6 +221,9 @@ CLAUDE.md
 uploads/
 pentest_target.db
 upload_tracker.json
+chat_store.json
+chat_store.lock
+chat_store.tmp
 
 # Added by ggshield
 .cache_ggshield
