@@ -50,7 +50,8 @@ def chat_page():
     return render_template('chat.html',
                            max_message_length=chat_store.MAX_MESSAGE_LENGTH,
                            min_password_length=chat_store.MIN_PASSWORD_LENGTH,
-                           poll_interval_ms=chat_store.POLL_INTERVAL_SECONDS * 1000)
+                           poll_interval_ms=chat_store.POLL_INTERVAL_SECONDS * 1000,
+                           session_max_ms=chat_store.SESSION_MAX_SECONDS * 1000)
 
 
 @chat_bp.route('/api/check', methods=['POST'])

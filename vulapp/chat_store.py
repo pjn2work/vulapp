@@ -30,6 +30,7 @@ MIN_PASSWORD_LENGTH = 4
 MAX_PASSWORD_LENGTH = 128
 CHAT_CREATED_MESSAGE = 'Chat created'  # first message, so a new chat lives for at least 24h
 POLL_INTERVAL_SECONDS = 5       # how often the chat page fetches new messages
+SESSION_MAX_SECONDS = 15 * 60   # the chat page leaves the chat automatically after this long
 
 
 def _sha256(value):

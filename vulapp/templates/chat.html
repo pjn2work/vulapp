@@ -303,7 +303,9 @@
 <script>
 (function () {
     const TOKEN_KEY = 'chat_token';
+    const JOINED_AT_KEY = 'chat_joined_at';
     const POLL_MS = {{ poll_interval_ms|int }};
+    const SESSION_MAX_MS = {{ session_max_ms|int }};
 
     const $ = (id) => document.getElementById(id);
     const steps = { key: $('step-key'), password: $('step-password'), chat: $('step-chat') };
@@ -313,6 +315,7 @@
     let token = null;
     let lastId = 0;
     let pollTimer = null;
+    let sessionTimer = null;
     const myMessageIds = new Set();
 
     function show(step) {
@@ -323,10 +326,19 @@
         try { return sessionStorage.getItem(TOKEN_KEY); } catch (e) { return null; }
     }
 
-    function writeToken(value) {
+    function readJoinedAt() {
+        try { return Number(sessionStorage.getItem(JOINED_AT_KEY)) || null; } catch (e) { return null; }
+    }
+
+    function writeToken(value, joinedAt) {
         try {
-            if (value) sessionStorage.setItem(TOKEN_KEY, value);
-            else sessionStorage.removeItem(TOKEN_KEY);
+            if (value) {
+                sessionStorage.setItem(TOKEN_KEY, value);
+                sessionStorage.setItem(JOINED_AT_KEY, String(joinedAt));
+            } else {
+                sessionStorage.removeItem(TOKEN_KEY);
+                sessionStorage.removeItem(JOINED_AT_KEY);
+            }
         } catch (e) { /* storage unavailable: token lives only in memory */ }
     }
 
@@ -401,9 +413,20 @@
     });
 
     // ---- Step 3: chat ----
-    function enterChat(newToken) {
+    function enterChat(newToken, joinedAt) {
+        // Leave automatically after SESSION_MAX_MS so idle tabs stop polling.
+        // joinedAt survives reloads, so refreshing the page doesn't reset the clock.
+        joinedAt = joinedAt || Date.now();
+        const remaining = SESSION_MAX_MS - (Date.now() - joinedAt);
+        if (remaining <= 0) {
+            leaveChat(sessionExpiredMessage());
+            return;
+        }
+        clearTimeout(sessionTimer);
+        sessionTimer = setTimeout(() => leaveChat(sessionExpiredMessage()), remaining);
+
         token = newToken;
-        writeToken(token);
+        writeToken(token, joinedAt);
         lastId = 0;
         myMessageIds.clear();
         $('messages').replaceChildren(emptyState());
@@ -413,9 +436,16 @@
         poll();
     }
 
+    function sessionExpiredMessage() {
+        const minutes = Math.round(SESSION_MAX_MS / 60000);
+        return `You left the chat automatically after ${minutes} minutes. Enter the key again to rejoin.`;
+    }
+
     function leaveChat(message) {
         clearTimeout(pollTimer);
         pollTimer = null;
+        clearTimeout(sessionTimer);
+        sessionTimer = null;
         token = null;
         writeToken(null);
         show('key');
@@ -577,7 +607,7 @@
 
     // Resume the chat after a page reload in the same tab
     const saved = readToken();
-    if (saved) enterChat(saved);
+    if (saved) enterChat(saved, readJoinedAt());
 })();
 </script>
 </body>
