@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
     <meta name="robots" content="noindex, nofollow">
     <title>Chat</title>
     <style>
@@ -204,9 +204,47 @@
         }
 
         @media (max-width: 600px) {
-            body { padding: 8px; }
-            .container { padding: 16px; }
-            #messages { height: 55vh; }
+            body { padding: 0; }
+            .container {
+                min-height: 100vh;
+                min-height: 100dvh;
+                padding: 16px;
+                border: none;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            h1 { font-size: 24px; }
+            .subtitle, label, .error, .empty, .chat-header .meta { font-size: 16px; }
+            /* 16px+ stops iOS Safari from zooming in when a field gets focus */
+            input, textarea, button { font-size: 16px; }
+            /* IP above time, Copy on the right, so the header never wraps onto a third line */
+            .message-head {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                column-gap: 10px;
+                row-gap: 2px;
+                font-size: 14px;
+            }
+            .message-head .copy {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+                align-self: center;
+                font-size: 14px;
+                padding: 8px 14px;
+            }
+            .message-text { font-size: 17px; }
+            .hint { display: none; }
+
+            /* Chat fills the screen: header and composer stay put, only the messages scroll */
+            #step-chat {
+                display: flex;
+                flex-direction: column;
+                height: calc(100vh - 32px);
+                height: calc(100dvh - 32px);
+            }
+            .chat-header { margin-bottom: 10px; }
+            #messages { flex: 1; height: auto; min-height: 0; }
+            form.composer textarea { resize: none; }
         }
     </style>
 </head>
