@@ -22,7 +22,7 @@ CHAT_STORE_FILE = Path('chat_store.json')
 CHAT_LOCK_FILE = Path('chat_store.lock')
 
 HISTORY_SECONDS = 24 * 60 * 60   # messages expire after 24h; a chat is deleted once it has no messages left
-TOKEN_SECONDS = 24 * 60 * 60     # an access token is valid for 24h
+TOKEN_SECONDS = 15 * 60          # an access token is valid for 15 min; then you must re-enter the password
 MAX_MESSAGES_PER_CHAT = 1000     # oldest messages are dropped beyond this
 MAX_MESSAGE_LENGTH = 2000
 MAX_KEY_LENGTH = 256
@@ -30,7 +30,6 @@ MIN_PASSWORD_LENGTH = 4
 MAX_PASSWORD_LENGTH = 128
 CHAT_CREATED_MESSAGE = 'Chat created'  # first message, so a new chat lives for at least 24h
 POLL_INTERVAL_SECONDS = 5       # how often the chat page fetches new messages
-SESSION_MAX_SECONDS = 15 * 60   # the chat page leaves the chat automatically after this long
 
 
 def _sha256(value):
@@ -83,9 +82,10 @@ def _prune(store):
         chat['messages'] = [m for m in chat['messages'] if m['ts'] >= message_cutoff]
         if not chat['messages']:
             del store['chats'][chat_id]
+    max_expires = now + TOKEN_SECONDS  # also drops tokens issued under a longer TOKEN_SECONDS
     for token_hash in list(store['tokens']):
         token = store['tokens'][token_hash]
-        if token['expires'] < now or token['chat'] not in store['chats']:
+        if not now <= token['expires'] <= max_expires or token['chat'] not in store['chats']:
             del store['tokens'][token_hash]
 
 
@@ -127,6 +127,14 @@ def _chat_for_token(store, token):
     if entry is None:
         return None
     return store['chats'].get(entry['chat'])
+
+
+def revoke_token(token):
+    """Delete the token so it stops working immediately. Unknown tokens are ignored."""
+    if not token:
+        return
+    with _locked_store() as store:
+        store['tokens'].pop(_sha256(token), None)
 
 
 def get_messages(token, after_id=0):

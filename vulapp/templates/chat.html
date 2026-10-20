@@ -316,6 +316,7 @@
     let lastId = 0;
     let pollTimer = null;
     let sessionTimer = null;
+    let sessionDeadline = 0;
     const myMessageIds = new Set();
 
     function show(step) {
@@ -413,17 +414,25 @@
     });
 
     // ---- Step 3: chat ----
+    // The server rejects the token after SESSION_MAX_MS; the page leaves on its own at the same time.
+    // Background tabs and sleeping phones delay timers, so the deadline is also checked
+    // before every request and whenever the tab becomes visible again.
+    function sessionExpired() {
+        if (!token || Date.now() < sessionDeadline) return false;
+        leaveChat(sessionExpiredMessage());
+        return true;
+    }
+
     function enterChat(newToken, joinedAt) {
-        // Leave automatically after SESSION_MAX_MS so idle tabs stop polling.
         // joinedAt survives reloads, so refreshing the page doesn't reset the clock.
         joinedAt = joinedAt || Date.now();
-        const remaining = SESSION_MAX_MS - (Date.now() - joinedAt);
-        if (remaining <= 0) {
+        sessionDeadline = joinedAt + SESSION_MAX_MS;
+        if (Date.now() >= sessionDeadline) {
             leaveChat(sessionExpiredMessage());
             return;
         }
         clearTimeout(sessionTimer);
-        sessionTimer = setTimeout(() => leaveChat(sessionExpiredMessage()), remaining);
+        sessionTimer = setTimeout(sessionExpired, sessionDeadline - Date.now());
 
         token = newToken;
         writeToken(token, joinedAt);
@@ -442,6 +451,14 @@
     }
 
     function leaveChat(message) {
+        if (token) {
+            // Revoke the token on the server; keepalive lets the request finish even if the page unloads
+            fetch('/chat/api/leave', {
+                method: 'POST',
+                headers: { 'X-Chat-Token': token },
+                keepalive: true,
+            }).catch(() => { /* the token still expires on its own */ });
+        }
         clearTimeout(pollTimer);
         pollTimer = null;
         clearTimeout(sessionTimer);
@@ -454,6 +471,10 @@
     }
 
     $('leave-btn').addEventListener('click', () => leaveChat());
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') sessionExpired();
+    });
 
     function emptyState() {
         const el = document.createElement('div');
@@ -549,7 +570,7 @@
 
     async function poll() {
         clearTimeout(pollTimer);
-        if (!token) return;
+        if (!token || sessionExpired()) return;
         try {
             const { ok, status, data } = await api('GET', '/chat/api/messages?after=' + lastId);
             if (status === 401) {
@@ -569,7 +590,7 @@
     async function send() {
         const input = $('message-input');
         const text = input.value;
-        if (!text.trim()) return;
+        if (!text.trim() || sessionExpired()) return;
         $('send-btn').disabled = true;
         try {
             const { ok, status, data } = await api('POST', '/chat/api/messages', { text });

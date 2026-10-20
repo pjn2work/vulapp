@@ -51,7 +51,7 @@ def chat_page():
                            max_message_length=chat_store.MAX_MESSAGE_LENGTH,
                            min_password_length=chat_store.MIN_PASSWORD_LENGTH,
                            poll_interval_ms=chat_store.POLL_INTERVAL_SECONDS * 1000,
-                           session_max_ms=chat_store.SESSION_MAX_SECONDS * 1000)
+                           session_max_ms=chat_store.TOKEN_SECONDS * 1000)
 
 
 @chat_bp.route('/api/check', methods=['POST'])
@@ -78,6 +78,12 @@ def join():
     if token is None:
         return jsonify({'error': 'Wrong password'}), 403
     return jsonify({'token': token, 'created': created})
+
+
+@chat_bp.route('/api/leave', methods=['POST'])
+def leave():
+    chat_store.revoke_token(_token())
+    return '', 204
 
 
 @chat_bp.route('/api/messages', methods=['GET'])
