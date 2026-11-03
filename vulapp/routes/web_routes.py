@@ -300,6 +300,12 @@ def polar_plotter():
     return render_template('polar.html')
 
 
+@web_bp.route('/web/workout-timer')
+def workout_timer():
+    """Workout Timer - Sequential interval timers with repetitions."""
+    return render_template('workout_timer.html')
+
+
 @web_bp.route('/web/geosketcher.js')
 def geosketcher_js():
     """Serve the GeoSketcher JavaScript file."""

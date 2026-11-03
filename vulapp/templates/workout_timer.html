@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout Timer</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+    --accent: #38bdf8;
+    --danger: #ef4444;
+    --ok: #22c55e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0; font-size: 1.3rem; }
+  main {
+    display: grid; grid-template-columns: 360px 1fr; gap: 20px;
+    padding: 20px; max-width: 1400px; margin: 0 auto;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 12px; } }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
+  }
+  .panel h2 { margin: 0 0 12px; font-size: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+  .slider-row { display: grid; grid-template-columns: 70px 1fr 44px; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .slider-row span.val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  input[type=text] {
+    width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: .95rem;
+  }
+  input[type=color] { width: 36px; height: 32px; border: none; background: none; padding: 0; cursor: pointer; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .preview { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 6px 0 12px; }
+
+  button {
+    border: none; border-radius: 8px; padding: 9px 14px; font-weight: 600;
+    cursor: pointer; font-size: .95rem; color: #0f172a; background: var(--accent);
+  }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  button.danger { background: var(--danger); color: #fff; }
+  button.ok { background: var(--ok); }
+  button.icon { padding: 4px 8px; font-size: .85rem; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  button.big { padding: 14px 28px; font-size: 1.1rem; }
+
+  /* Timer list */
+  #timerList { list-style: none; margin: 0; padding: 0; }
+  #timerList li {
+    display: grid; grid-template-columns: 6px 1fr auto; gap: 10px; align-items: center;
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 8px 8px 0; margin-bottom: 8px; overflow: hidden;
+  }
+  #timerList li.dragging { opacity: .4; }
+  #timerList li.drag-over { outline: 2px dashed var(--accent); }
+  #timerList .stripe { align-self: stretch; }
+  #timerList .info input[type=text] { padding: 5px 8px; font-size: .9rem; }
+  #timerList .dur { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; margin-top: 8px; font-size: .95rem; color: var(--muted); }
+  #timerList .dur input {
+    width: 52px; height: 42px; padding: 3px 3px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); text-align: center; font-size: 1.50rem; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  #timerList .dur input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #timerList .actions { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  #timerList .actions .row { gap: 4px; }
+  .handle { cursor: grab; color: var(--muted); padding: 0 4px; user-select: none; }
+  .empty { color: var(--muted); font-style: italic; text-align: center; padding: 12px; }
+  .total { color: var(--muted); font-size: .85rem; margin-top: 8px; }
+
+  /* Stage */
+  .stage-panel { min-height: 520px; display: flex; flex-direction: column; }
+  .reps-display { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+  .reps-counter { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .reps-counter small { font-size: 1rem; color: var(--muted); font-weight: 600; margin-right: 6px; }
+  .reps-dots { display: flex; gap: 6px; flex-wrap: wrap; max-width: 420px; justify-content: center; }
+  .reps-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border); transition: background .3s; }
+  .reps-dots span.done { background: var(--ok); }
+  .reps-dots span.current { background: var(--accent); box-shadow: 0 0 0 3px rgba(56,189,248,.3); }
+
+  .status { text-align: center; color: var(--muted); min-height: 1.5em; margin-bottom: 8px; font-size: 1.05rem; }
+  .status.done { color: var(--ok); font-weight: 700; font-size: 1.5rem; }
+
+  #stage {
+    flex: 1; display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+    gap: 50px 40px; padding: 40px 20px;
+  }
+  .ring {
+    position: relative; width: 190px; height: 190px;
+    transition: transform .45s cubic-bezier(.34,1.56,.64,1), opacity .3s, filter .3s;
+    opacity: .55;
+  }
+  .ring.active { transform: scale(1.25); opacity: 1; filter: drop-shadow(0 0 18px var(--glow)); z-index: 1; }
+  .ring.finished { opacity: .3; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring .track { fill: none; stroke: var(--border); stroke-width: 10; }
+  .ring .bar { fill: none; stroke-width: 10; stroke-linecap: round; }
+  .ring .center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 26px;
+  }
+  .ring .label { font-weight: 700; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+  .ring .time { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
+
+  .controls { display: flex; justify-content: center; gap: 12px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⏱️ Workout Timer</h1>
+  <a href="/">← Back to Home</a>
+</header>
+
+<main>
+  <aside>
+    <div class="panel" id="builder">
+      <h2>New Timer</h2>
+      <label for="newLabel">Description</label>
+      <div class="row" style="margin-bottom:12px">
+        <input type="text" id="newLabel" placeholder="e.g. Workout" maxlength="30">
+        <input type="color" id="newColor" title="Timer color">
+      </div>
+      <div class="slider-row">
+        <label for="hSlider" style="margin:0">Hours</label>
+        <input type="range" id="hSlider" min="0" max="23" value="0">
+        <span class="val" id="hVal">0</span>
+      </div>
+      <div class="slider-row">
+        <label for="mSlider" style="margin:0">Minutes</label>
+        <input type="range" id="mSlider" min="0" max="59" value="0">
+        <span class="val" id="mVal">0</span>
+      </div>
+      <div class="slider-row">
+        <label for="sSlider" style="margin:0">Seconds</label>
+        <input type="range" id="sSlider" min="0" max="59" value="40">
+        <span class="val" id="sVal">40</span>
+      </div>
+      <div class="preview" id="newPreview">0:40</div>
+      <button id="addBtn" style="width:100%">+ Add Timer</button>
+    </div>
+
+    <div class="panel">
+      <h2>Sequence</h2>
+      <ul id="timerList"></ul>
+      <div class="total" id="totalInfo"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Repetitions</h2>
+      <div class="slider-row" style="grid-template-columns: 1fr 44px">
+        <input type="range" id="repSlider" min="1" max="10" value="1">
+        <span class="val" id="repVal">1</span>
+      </div>
+    </div>
+  </aside>
+
+  <section class="panel stage-panel">
+    <div class="reps-display">
+      <div class="reps-counter"><small>Round</small><span id="repCounter">0 / 1</span></div>
+      <div class="reps-dots" id="repDots"></div>
+    </div>
+    <div class="status" id="status">Add timers and press Start</div>
+    <div id="stage"></div>
+    <div class="controls">
+      <button class="ok big" id="startBtn">▶ Start</button>
+      <button class="danger big" id="resetBtn">■ Stop / Reset</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const PALETTE = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#14b8a6', '#ec4899', '#84cc16', '#f97316', '#06b6d4'];
+  const STORAGE_KEY = 'workoutTimer.v1';
+  const R = 80, C = 2 * Math.PI * R;
+
+  const $ = id => document.getElementById(id);
+  const els = {
+    newLabel: $('newLabel'), newColor: $('newColor'),
+    h: $('hSlider'), m: $('mSlider'), s: $('sSlider'),
+    hVal: $('hVal'), mVal: $('mVal'), sVal: $('sVal'),
+    preview: $('newPreview'), addBtn: $('addBtn'),
+    list: $('timerList'), totalInfo: $('totalInfo'),
+    rep: $('repSlider'), repVal: $('repVal'),
+    repCounter: $('repCounter'), repDots: $('repDots'),
+    status: $('status'), stage: $('stage'),
+    startBtn: $('startBtn'), resetBtn: $('resetBtn'),
+  };
+
+  // ---------- State ----------
+  let timers = [];      // {id, label, seconds, color}
+  let reps = 1;
+  let nextId = 1;
+
+  const run = {
+    state: 'idle',      // idle | running | paused | done
+    round: 0,
+    index: -1,
+    endTime: 0,
+    remainingMs: 0,
+    raf: 0,
+  };
+
+  // ---------- Utilities ----------
+  function fmt(totalSec) {
+    totalSec = Math.max(0, Math.ceil(totalSec));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const pad = n => String(n).padStart(2, '0');
+    return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+  }
+  function nextColor() {
+    const used = new Set(timers.map(t => t.color.toLowerCase()));
+    return PALETTE.find(c => !used.has(c)) || PALETTE[timers.length % PALETTE.length];
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ timers, reps })); } catch (e) {}
+  }
+  function load() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (data && Array.isArray(data.timers)) {
+        timers = data.timers.filter(t => t && t.seconds > 0).map(t => ({
+          id: nextId++, label: String(t.label || ''), seconds: +t.seconds, color: t.color || PALETTE[0],
+        }));
+        reps = Math.min(10, Math.max(1, +data.reps || 1));
+        return;
+      }
+    } catch (e) {}
+    // Default example sequence
+    timers = [
+      { id: nextId++, label: 'Workout', seconds: 40, color: PALETTE[0] },
+      { id: nextId++, label: 'Rest',    seconds: 20, color: PALETTE[1] },
+    ];
+  }
+  const editable = () => run.state === 'idle' || run.state === 'done';
+
+  // ---------- Sound ----------
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function tone(freq, start, dur, vol = 0.25) {
+    if (!audioCtx) return;
+    const t0 = audioCtx.currentTime + start;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.05);
+  }
+  const beepTimerEnd = () => { tone(880, 0, 0.18); tone(1175, 0.2, 0.25); };
+  const beepRoundEnd = () => { tone(660, 0, 0.15); tone(880, 0.17, 0.15); tone(1320, 0.34, 0.3); };
+  const beepAllDone  = () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.16, i === 3 ? 0.6 : 0.18, 0.3)); };
+
+  // ---------- Builder ----------
+  function builderSeconds() { return (+els.h.value) * 3600 + (+els.m.value) * 60 + (+els.s.value); }
+  function updateBuilder() {
+    els.hVal.textContent = els.h.value;
+    els.mVal.textContent = els.m.value;
+    els.sVal.textContent = els.s.value;
+    const secs = builderSeconds();
+    els.preview.textContent = fmt(secs);
+    els.addBtn.disabled = secs <= 0 || !editable();
+  }
+  [els.h, els.m, els.s].forEach(el => el.addEventListener('input', updateBuilder));
+
+  els.addBtn.addEventListener('click', () => {
+    const secs = builderSeconds();
+    if (secs <= 0 || !editable()) return;
+    const label = els.newLabel.value.trim() || `Timer ${timers.length + 1}`;
+    timers.push({ id: nextId++, label, seconds: secs, color: els.newColor.value });
+    els.newLabel.value = '';
+    els.newColor.value = nextColor();
+    resetRun();
+    renderAll();
+  });
+  els.newLabel.addEventListener('keydown', e => { if (e.key === 'Enter') els.addBtn.click(); });
+
+  // ---------- Sequence list ----------
+  let dragId = null;
+
+  function renderList() {
+    els.list.innerHTML = '';
+    if (!timers.length) {
+      const li = document.createElement('div');
+      li.className = 'empty';
+      li.textContent = 'No timers yet — add one above.';
+      els.list.appendChild(li);
+    }
+    const lock = !editable();
+    timers.forEach((t, i) => {
+      const li = document.createElement('li');
+      li.draggable = !lock;
+      li.dataset.id = t.id;
+
+      const stripe = document.createElement('div');
+      stripe.className = 'stripe';
+      stripe.style.background = t.color;
+
+      const info = document.createElement('div');
+      info.className = 'info';
+      const labelRow = document.createElement('div');
+      labelRow.className = 'row';
+      const handle = document.createElement('span');
+      handle.className = 'handle';
+      handle.textContent = '⋮⋮';
+      handle.title = 'Drag to reorder';
+      const labelInput = document.createElement('input');
+      labelInput.type = 'text';
+      labelInput.value = t.label;
+      labelInput.maxLength = 30;
+      labelInput.disabled = lock;
+      labelInput.addEventListener('input', () => { t.label = labelInput.value; save(); renderStage(); });
+      const color = document.createElement('input');
+      color.type = 'color';
+      color.value = t.color;
+      color.disabled = lock;
+      color.addEventListener('input', () => { t.color = color.value; stripe.style.background = t.color; save(); renderStage(); });
+      labelRow.append(handle, labelInput, color);
+
+      const dur = document.createElement('div');
+      dur.className = 'dur';
+      const parts = [Math.floor(t.seconds / 3600), Math.floor((t.seconds % 3600) / 60), t.seconds % 60];
+      const maxes = [23, 59, 59];
+      const inputs = parts.map((v, k) => {
+        const inp = document.createElement('input');
+        inp.type = 'number'; inp.min = 0; inp.max = maxes[k]; inp.value = v;
+        inp.inputMode = 'numeric';
+        inp.addEventListener('focus', () => inp.select());
+        inp.disabled = lock;
+        return inp;
+      });
+      const onDur = () => {
+        const vals = inputs.map((inp, k) => Math.min(maxes[k], Math.max(0, parseInt(inp.value, 10) || 0)));
+        const secs = vals[0] * 3600 + vals[1] * 60 + vals[2];
+        if (secs > 0) { t.seconds = secs; save(); renderStage(); updateTotal(); }
+      };
+      inputs.forEach(inp => {
+        inp.addEventListener('change', () => { onDur(); renderList(); });
+        inp.addEventListener('input', onDur);
+      });
+      dur.append(inputs[0], 'h', inputs[1], 'm', inputs[2], 's');
+      info.append(labelRow, dur);
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      const moveRow = document.createElement('div');
+      moveRow.className = 'row';
+      const up = document.createElement('button');
+      up.className = 'icon'; up.textContent = '▲'; up.title = 'Move up';
+      up.disabled = lock || i === 0;
+      up.addEventListener('click', () => move(i, i - 1));
+      const down = document.createElement('button');
+      down.className = 'icon'; down.textContent = '▼'; down.title = 'Move down';
+      down.disabled = lock || i === timers.length - 1;
+      down.addEventListener('click', () => move(i, i + 1));
+      moveRow.append(up, down);
+      const del = document.createElement('button');
+      del.className = 'icon'; del.textContent = '✕ Remove'; del.title = 'Remove timer';
+      del.style.color = '#fca5a5';
+      del.disabled = lock;
+      del.addEventListener('click', () => {
+        timers.splice(i, 1);
+        resetRun();
+        renderAll();
+      });
+      actions.append(moveRow, del);
+
+      // Drag & drop reorder
+      li.addEventListener('dragstart', e => {
+        if (e.target.tagName === 'INPUT') { e.preventDefault(); return; }
+        dragId = t.id; li.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      li.addEventListener('dragend', () => { dragId = null; li.classList.remove('dragging'); });
+      li.addEventListener('dragover', e => { if (dragId !== null) { e.preventDefault(); li.classList.add('drag-over'); } });
+      li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+      li.addEventListener('drop', e => {
+        e.preventDefault(); li.classList.remove('drag-over');
+        const from = timers.findIndex(x => x.id === dragId);
+        if (from >= 0 && from !== i) move(from, i);
+      });
+
+      li.append(stripe, info, actions);
+      els.list.appendChild(li);
+    });
+    updateTotal();
+  }
+
+  function move(from, to) {
+    if (to < 0 || to >= timers.length) return;
+    const [t] = timers.splice(from, 1);
+    timers.splice(to, 0, t);
+    resetRun();
+    renderAll();
+  }
+
+  function updateTotal() {
+    const one = timers.reduce((a, t) => a + t.seconds, 0);
+    els.totalInfo.textContent = timers.length
+      ? `${timers.length} timer${timers.length > 1 ? 's' : ''} · ${fmt(one)} per round · ${fmt(one * reps)} total`
+      : '';
+  }
+
+  // ---------- Repetitions ----------
+  els.rep.addEventListener('input', () => {
+    reps = +els.rep.value;
+    els.repVal.textContent = reps;
+    if (run.round > reps) run.round = reps;
+    save(); updateTotal(); renderReps();
+  });
+
+  function renderReps() {
+    els.repCounter.textContent = `${run.round} / ${reps}`;
+    els.repDots.innerHTML = '';
+    for (let i = 1; i <= reps; i++) {
+      const d = document.createElement('span');
+      if (run.state === 'done' || i < run.round) d.className = 'done';
+      else if (i === run.round && run.state !== 'idle') d.className = 'current';
+      els.repDots.appendChild(d);
+    }
+  }
+
+  // ---------- Stage ----------
+  let ringEls = [];
+
+  function renderStage() {
+    els.stage.innerHTML = '';
+    ringEls = timers.map((t, i) => {
+      const ring = document.createElement('div');
+      ring.className = 'ring';
+      ring.style.setProperty('--glow', t.color + '99');
+      ring.innerHTML = `
+        <svg viewBox="0 0 190 190">
+          <circle class="track" cx="95" cy="95" r="${R}"></circle>
+          <circle class="bar" cx="95" cy="95" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="center">
+          <div class="label"></div>
+          <div class="time"></div>
+        </div>`;
+      ring.querySelector('.bar').style.stroke = t.color;
+      ring.querySelector('.label').textContent = t.label;
+      ring.querySelector('.label').style.color = t.color;
+      els.stage.appendChild(ring);
+      return { ring, bar: ring.querySelector('.bar'), time: ring.querySelector('.time') };
+    });
+    updateStage();
+  }
+
+  function updateStage() {
+    const now = performance.now();
+    timers.forEach((t, i) => {
+      const r = ringEls[i];
+      if (!r) return;
+      let remainingMs;
+      const isActive = i === run.index && (run.state === 'running' || run.state === 'paused');
+      if (isActive) {
+        remainingMs = run.state === 'running' ? run.endTime - now : run.remainingMs;
+      } else if (run.state === 'done' || (run.state !== 'idle' && i < run.index)) {
+        remainingMs = 0;
+      } else {
+        remainingMs = t.seconds * 1000;
+      }
+      remainingMs = Math.max(0, Math.min(t.seconds * 1000, remainingMs));
+      const frac = remainingMs / (t.seconds * 1000);
+      r.bar.setAttribute('stroke-dashoffset', String(C * (1 - frac)));
+      r.time.textContent = fmt(remainingMs / 1000);
+      r.ring.classList.toggle('active', isActive);
+      r.ring.classList.toggle('finished', remainingMs === 0 && !isActive);
+    });
+  }
+
+  // ---------- Runner ----------
+  function startTimer(i) {
+    run.index = i;
+    run.endTime = performance.now() + timers[i].seconds * 1000;
+    els.status.className = 'status';
+    els.status.textContent = `${timers[i].label || 'Timer ' + (i + 1)}`;
+    els.status.style.color = timers[i].color;
+    renderReps();
+  }
+
+  function tick() {
+    if (run.state !== 'running') return;
+    const now = performance.now();
+    // Loop handles the (rare) case where a tab was backgrounded and several timers elapsed
+    while (run.state === 'running' && now >= run.endTime) {
+      const overshoot = now - run.endTime;
+      if (run.index + 1 < timers.length) {
+        beepTimerEnd();
+        startTimer(run.index + 1);
+        run.endTime -= overshoot;
+      } else if (run.round < reps) {
+        beepRoundEnd();
+        run.round++;
+        startTimer(0);
+        run.endTime -= overshoot;
+      } else {
+        finish();
+        return;
+      }
+    }
+    updateStage();
+    run.raf = requestAnimationFrame(tick);
+  }
+
+  function start() {
+    if (!timers.length) return;
+    ensureAudio();
+    if (run.state === 'paused') {
+      run.endTime = performance.now() + run.remainingMs;
+      run.state = 'running';
+      els.status.textContent = timers[run.index].label;
+    } else {
+      run.state = 'running';
+      run.round = 1;
+      startTimer(0);
+    }
+    updateControls();
+    renderList();
+    run.raf = requestAnimationFrame(tick);
+  }
+
+  function pause() {
+    run.remainingMs = run.endTime - performance.now();
+    run.state = 'paused';
+    cancelAnimationFrame(run.raf);
+    els.status.textContent = `Paused — ${timers[run.index].label}`;
+    updateControls();
+    updateStage();
+  }
+
+  function finish() {
+    cancelAnimationFrame(run.raf);
+    run.state = 'done';
+    run.index = -1;
+    beepAllDone();
+    els.status.className = 'status done';
+    els.status.style.color = '';
+    els.status.textContent = '🎉 All done!';
+    renderReps();
+    updateStage();
+    updateControls();
+    renderList();
+  }
+
+  function resetRun() {
+    cancelAnimationFrame(run.raf);
+    run.state = 'idle';
+    run.round = 0;
+    run.index = -1;
+    els.status.className = 'status';
+    els.status.style.color = '';
+    els.status.textContent = timers.length ? 'Ready — press Start' : 'Add timers and press Start';
+  }
+
+  function updateControls() {
+    const running = run.state === 'running';
+    els.startBtn.textContent = running ? '❚❚ Pause' : (run.state === 'paused' ? '▶ Resume' : '▶ Start');
+    els.startBtn.disabled = !timers.length;
+    els.rep.disabled = !editable();
+    els.newLabel.disabled = !editable();
+    updateBuilder();
+  }
+
+  els.startBtn.addEventListener('click', () => {
+    if (run.state === 'running') pause();
+    else start();
+  });
+  els.resetBtn.addEventListener('click', () => {
+    resetRun();
+    renderAll();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+      e.preventDefault(); els.startBtn.click();
+    }
+  });
+
+  function renderAll() {
+    save();
+    renderList();
+    renderStage();
+    renderReps();
+    updateControls();
+  }
+
+  // ---------- Init ----------
+  load();
+  els.rep.value = reps;
+  els.repVal.textContent = reps;
+  els.newColor.value = nextColor();
+  updateBuilder();
+  resetRun();
+  renderAll();
+})();
+</script>
+</body>
+</html>
